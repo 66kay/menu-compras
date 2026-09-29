@@ -37,11 +37,12 @@ export const db = new MenuComprasDB();
 
 /**
  * Inicializa la base de datos local (IndexedDB) sembrando o actualizando las 40 recetas chilenas/gym
- * ultra rápidas (2-15 min, 1 sartén/olla, microondas o licuadora) estrictamente sin legumbres.
+ * ultra rápidas (2-15 min, 1 sartén/olla, microondas o al paso), estrictamente sin legumbres,
+ * sin licuadora y sin ingredientes no deseados (pepinillos, alcaparras, aceitunas, pasas, mostaza, jengibre).
  */
 export async function inicializarBaseDatos(): Promise<void> {
   try {
-    const RECETAS_VERSION = 'v2-express-timing';
+    const RECETAS_VERSION = 'v3-express-no-blender-clean';
     const versionGuardada = localStorage.getItem('menu_recetas_version');
     const conteoRecetas = await db.recetas.count();
 

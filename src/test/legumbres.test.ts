@@ -101,4 +101,22 @@ describe('Exclusión Estricta de Legumbres y Validación de Recetas', () => {
     };
     expect(esRecetaPermitida(recetaConGarbanzos, perfilBase)).toBe(false);
   });
+
+  it('ninguna de las 40 recetas contiene ingredientes odiados por el usuario (pepinillos, alcaparras, aceitunas, pasas, mostaza, jengibre)', () => {
+    const odiados = ['pepinillo', 'alcaparra', 'aceituna', 'pasa', 'mostaza', 'jengibre'];
+
+    for (const receta of SEMILLAS_RECETAS) {
+      const texto = `${receta.nombre} ${receta.descripcion ?? ''} ${receta.ingredientes
+        .map((i) => i.nombre)
+        .join(' ')}`.toLowerCase();
+
+      for (const palabra of odiados) {
+        expect(
+          texto.includes(palabra),
+          `La receta "${receta.nombre}" contiene ingrediente no deseado "${palabra}"`
+        ).toBe(false);
+      }
+    }
+  });
 });
+

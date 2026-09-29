@@ -53,6 +53,25 @@ export function esRecetaPermitida(receta: Receta, perfil: PerfilUsuario): boolea
     return false;
   }
 
+  // 3. Exclusiones personales estrictas del usuario (pepinillos, alcaparras, aceitunas, pasas, mostaza, jengibre)
+  const odiados = [
+    'pepinillo',
+    'pepinillos',
+    'alcaparra',
+    'alcaparras',
+    'aceituna',
+    'aceitunas',
+    'pasa',
+    'pasas',
+    'mostaza',
+    'jengibre',
+  ];
+  for (const palabra of odiados) {
+    if (textoCompleto.includes(palabra)) {
+      return false;
+    }
+  }
+
   return true;
 }
 

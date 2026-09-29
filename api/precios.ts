@@ -50,59 +50,94 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Parámetro de búsqueda "q" inválido o muy corto.' });
   }
 
-  const token = process.env.APIFY_API_TOKEN;
-
-  // Si no está configurado el token en Vercel, respondemos indicando modo fallback elegante
-  if (!token) {
-    return res.status(200).json({
-      success: false,
-      fallback: true,
-      mensaje: 'APIFY_API_TOKEN no configurado en el servidor. Utilizando catálogo base y caché local.',
-      sucursal: store,
-      productos: [],
-    });
-  }
-
+  // 1. Intento principal: Consulta directa a super.lider.cl vía Server-Side Rendering
   try {
-    // Ejemplo de llamada segura al Actor de Apify / Scraper de Líder
-    // https://api.apify.com/v2/acts/.../run-sync-get-dataset-items
-    const apifyUrl = `https://api.apify.com/v2/acts/apify~web-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(
-      token
-    )}`;
-
-    const response = await fetch(apifyUrl, {
-      method: 'POST',
+    const liderUrl = `https://super.lider.cl/search?query=${encodeURIComponent(query.trim())}`;
+    const liderRes = await fetch(liderUrl, {
       headers: {
-        'Content-Type': 'application/json',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'es-CL,es;q=0.9',
       },
-      body: JSON.stringify({
-        queries: [query],
-        store: store,
-        maxItems: 8,
-      }),
     });
 
-    if (!response.ok) {
-      throw new Error(`Error en API de Apify: ${response.status} ${response.statusText}`);
+    if (liderRes.ok) {
+      const html = await liderRes.text();
+      const match = html.match(/<script id=__NEXT_DATA__ type="application\/json"[^>]*>(.*?)<\/script>/s);
+      if (match) {
+        const parsed = JSON.parse(match[1]);
+        const rawItems = parsed.props?.pageProps?.initialData?.searchResult?.itemStacks?.[0]?.items || [];
+
+        if (Array.isArray(rawItems) && rawItems.length > 0) {
+          const productos: ApifyLiderItem[] = rawItems.slice(0, 10).map((item: any) => ({
+            id: item.id || item.usItemId,
+            sku: item.usItemId || item.id,
+            name: item.name,
+            brand: item.brand || 'Líder',
+            price: typeof item.price === 'number' ? item.price : parseInt(String(item.price).replace(/\D/g, ''), 10) || 0,
+            originalPrice: item.priceInfo?.wasPrice ? parseInt(String(item.priceInfo.wasPrice).replace(/\D/g, ''), 10) : undefined,
+            imageUrl: item.imageInfo?.thumbnailUrl || item.imageInfo?.allImages?.[0]?.url || '',
+            url: item.canonicalUrl ? `https://super.lider.cl${item.canonicalUrl}` : `https://super.lider.cl/ip/${item.usItemId}`,
+            isAvailable: item.availabilityStatusV2?.value !== 'OUT_OF_STOCK',
+            category: item.departmentName || 'Supermercado',
+          }));
+
+          return res.status(200).json({
+            success: true,
+            fallback: false,
+            fuente: 'super.lider.cl direct',
+            sucursal: store,
+            productos,
+          });
+        }
+      }
     }
-
-    const items = (await response.json()) as ApifyLiderItem[];
-
-    return res.status(200).json({
-      success: true,
-      fallback: false,
-      sucursal: store,
-      productos: items,
-    });
-  } catch (error) {
-    console.error('Error al consultar precios en Apify/Líder:', error);
-    return res.status(200).json({
-      success: false,
-      fallback: true,
-      mensaje: 'Falla temporal al conectar con Líder. Se activa respaldo local.',
-      error: error instanceof Error ? error.message : 'Error desconocido',
-      sucursal: store,
-      productos: [],
-    });
+  } catch (directErr) {
+    console.warn('Consulta directa a super.lider.cl falló, intentando Apify...', directErr);
   }
+
+  // 2. Intento secundario: Apify Actor si el token está disponible
+  const token = process.env.APIFY_API_TOKEN;
+  if (token) {
+    try {
+      const apifyUrl = `https://api.apify.com/v2/acts/scraperschile~lider-cl/run-sync-get-dataset-items?token=${encodeURIComponent(
+        token
+      )}`;
+
+      const response = await fetch(apifyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          queries: [query],
+          store: store,
+          maxItems: 8,
+        }),
+      });
+
+      if (response.ok) {
+        const items = (await response.json()) as ApifyLiderItem[];
+        return res.status(200).json({
+          success: true,
+          fallback: false,
+          fuente: 'apify lider-cl',
+          sucursal: store,
+          productos: items,
+        });
+      }
+    } catch (apifyErr) {
+      console.warn('Consulta a Apify falló:', apifyErr);
+    }
+  }
+
+  // 3. Fallback controlado para que el frontend use el catálogo base verificado
+  return res.status(200).json({
+    success: false,
+    fallback: true,
+    mensaje: 'Activando catálogo verificado de Líder y caché local.',
+    sucursal: store,
+    productos: [],
+  });
 }

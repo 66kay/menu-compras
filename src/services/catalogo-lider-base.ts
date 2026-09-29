@@ -5104,17 +5104,48 @@ export const CATALOGO_LIDER_BASE: Producto[] = [
   }
 ];
 
+function normalizarTexto(t: string): string {
+  return t
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 /**
- * Obtiene los productos del catálogo base para un término de búsqueda específico.
+ * Obtiene los productos del catálogo base para un término de búsqueda específico,
+ * utilizando coincidencia directa, de término o palabras clave normalizadas.
  */
 export function buscarEnCatalogoBase(termino: string): Producto[] {
-  const norm = termino.toLowerCase().trim();
-  return CATALOGO_LIDER_BASE.filter(
+  const norm = normalizarTexto(termino);
+  if (!norm) return [];
+
+  // 1. Coincidencia directa o por término de búsqueda asociado
+  const directos = CATALOGO_LIDER_BASE.filter(
     (p) =>
-      p.nombre.toLowerCase().includes(norm) ||
-      (p.marca && p.marca.toLowerCase().includes(norm)) ||
-      (p.terminoBusqueda && p.terminoBusqueda.toLowerCase().includes(norm))
+      normalizarTexto(p.nombre).includes(norm) ||
+      (p.marca && normalizarTexto(p.marca).includes(norm)) ||
+      (p.terminoBusqueda && normalizarTexto(p.terminoBusqueda).includes(norm)) ||
+      (p.terminoBusqueda && norm.includes(normalizarTexto(p.terminoBusqueda)))
   );
+  if (directos.length > 0) return directos;
+
+  // 2. Coincidencia por palabras clave significativas
+  const stopwords = new Set(['con', 'sin', 'para', 'del', 'los', 'las', 'una', 'por', 'sobre', 'fresca', 'fresco', 'granel', 'tradicional']);
+  const palabras = norm.split(/\s+/).filter((w) => w.length > 2 && !stopwords.has(w));
+
+  const parciales = CATALOGO_LIDER_BASE.filter((p) => {
+    const textoProd = normalizarTexto(`${p.nombre} ${p.marca ?? ''} ${p.terminoBusqueda ?? ''}`);
+    const matches = palabras.filter((w) => textoProd.includes(w)).length;
+    return matches >= Math.min(2, palabras.length);
+  });
+  if (parciales.length > 0) return parciales;
+
+  // 3. Fallback: al menos una palabra clave coincide
+  return CATALOGO_LIDER_BASE.filter((p) => {
+    const textoProd = normalizarTexto(`${p.nombre} ${p.marca ?? ''} ${p.terminoBusqueda ?? ''}`);
+    return palabras.some((w) => textoProd.includes(w));
+  });
 }
 
 /**

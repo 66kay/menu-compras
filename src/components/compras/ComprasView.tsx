@@ -15,22 +15,91 @@ import {
   Package,
   Snowflake,
   Coffee,
+  ExternalLink,
 } from 'lucide-react';
-import type { ItemCompra, CategoriaPasillo } from '../../types';
-import { TITULOS_PASILLOS } from '../../logic/lista-compras';
+import type { ItemCompra, CategoriaPasillo, PlanDia, Receta, ItemDespensa } from '../../types';
+import { TITULOS_PASILLOS, generarListaCompras } from '../../logic/lista-compras';
 import { db } from '../../db';
 import { liderProvider } from '../../services/precios';
 
 interface ComprasViewProps {
   itemsCompra: ItemCompra[];
+  planesSemana?: PlanDia[];
+  recetas?: Receta[];
+  despensa?: ItemDespensa[];
+  fechaLunesActual?: string;
   onActualizarItems: () => void;
 }
 
-export const ComprasView: React.FC<ComprasViewProps> = ({ itemsCompra, onActualizarItems }) => {
+/**
+ * Calcula la cantidad de envases/packs que se deben comprar en Líder
+ * y el costo subtotal real del alimento.
+ */
+export function calcularUnidadesYSubtotal(item: ItemCompra) {
+  if (item.cantidadAComprar <= 0) return { unidades: 0, subtotal: 0, textoPresentacion: '' };
+  const prod = item.productoSeleccionado;
+  const precioUnitario = item.productoManual?.precio ?? prod?.precio ?? 0;
+
+  let gramosEnvase = 0;
+  if (prod?.cantidadPresentacion) {
+    const gMatch = prod.cantidadPresentacion.match(/(\d+)\s*g/i);
+    const kgMatch = prod.cantidadPresentacion.match(/(\d+(?:[.,]\d+)?)\s*kg/i);
+    const lMatch = prod.cantidadPresentacion.match(/(\d+(?:[.,]\d+)?)\s*l/i);
+    if (gMatch?.[1]) gramosEnvase = parseInt(gMatch[1], 10);
+    else if (kgMatch?.[1]) gramosEnvase = Math.round(parseFloat(kgMatch[1].replace(',', '.')) * 1000);
+    else if (lMatch?.[1]) gramosEnvase = Math.round(parseFloat(lMatch[1].replace(',', '.')) * 1000);
+  }
+
+  let unidades = 1;
+  if (gramosEnvase > 0) {
+    const gramosNecesarios =
+      item.unidad === 'kg' || item.unidad === 'l'
+        ? item.cantidadAComprar * 1000
+        : item.cantidadAComprar;
+    unidades = Math.max(1, Math.ceil(gramosNecesarios / gramosEnvase));
+  } else if (item.unidad === 'unidad') {
+    const unidadesPack = prod?.nombre.match(/(\d+)\s*Un/i);
+    if (unidadesPack?.[1]) {
+      const uEnPack = parseInt(unidadesPack[1], 10);
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar / uEnPack));
+    } else {
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar));
+    }
+  } else {
+    unidades = Math.max(1, Math.ceil(item.cantidadAComprar));
+  }
+
+  const subtotal = unidades * precioUnitario;
+  const textoPresentacion =
+    prod?.cantidadPresentacion && prod.cantidadPresentacion !== '1 un'
+      ? `${unidades} ${unidades === 1 ? 'pack' : 'packs'} (${prod.cantidadPresentacion})`
+      : `${unidades} ${unidades === 1 ? 'unidad' : 'unidades'}`;
+
+  return { unidades, subtotal, textoPresentacion };
+}
+
+export const ComprasView: React.FC<ComprasViewProps> = ({
+  itemsCompra,
+  planesSemana,
+  recetas,
+  despensa,
+  fechaLunesActual,
+  onActualizarItems,
+}) => {
+  const [periodo, setPeriodo] = useState<'mes' | 'semana'>('mes');
   const [modoTienda, setModoTienda] = useState<boolean>(false);
   const [sincronizando, setSincronizando] = useState<boolean>(false);
   const [itemEditandoManual, setItemEditandoManual] = useState<ItemCompra | null>(null);
   const [precioManualInput, setPrecioManualInput] = useState<string>('');
+
+  // Ítems mostrados según período (mes completo o semana actual)
+  const itemsMostrados = React.useMemo(() => {
+    if (periodo === 'semana' && planesSemana && recetas && despensa && fechaLunesActual) {
+      const planes7 = planesSemana.slice(0, 7);
+      return generarListaCompras(planes7, recetas, despensa, fechaLunesActual);
+    }
+    return itemsCompra; // Mes completo (28 días) por defecto
+  }, [periodo, itemsCompra, planesSemana, recetas, despensa, fechaLunesActual]);
 
   // Iconos por pasillo
   const renderIconoPasillo = (pasillo: CategoriaPasillo) => {
@@ -58,7 +127,7 @@ export const ComprasView: React.FC<ComprasViewProps> = ({ itemsCompra, onActuali
 
   // Toggle comprado
   const handleToggleComprado = async (itemId: string) => {
-    const item = itemsCompra.find((i) => i.id === itemId);
+    const item = itemsMostrados.find((i) => i.id === itemId);
     if (!item) return;
 
     item.comprado = !item.comprado;
@@ -70,7 +139,7 @@ export const ComprasView: React.FC<ComprasViewProps> = ({ itemsCompra, onActuali
   const handleSincronizarPrecios = async () => {
     setSincronizando(true);
     try {
-      for (const item of itemsCompra) {
+      for (const item of itemsMostrados) {
         if (!item.productoSeleccionado && !item.productoManual) {
           const productos = await liderProvider.buscar(item.ingredienteNombre);
           if (productos.length > 0) {
@@ -119,20 +188,52 @@ export const ComprasView: React.FC<ComprasViewProps> = ({ itemsCompra, onActuali
   const itemsPorPasillo = pasillosOrdenados.map((pasillo) => ({
     pasillo,
     config: TITULOS_PASILLOS[pasillo],
-    items: itemsCompra.filter((i) => i.categoriaPasillo === pasillo),
+    items: itemsMostrados.filter((i) => i.categoriaPasillo === pasillo),
   }));
 
-  // Cálculo del total estimado del carro
-  const totalEstimado = itemsCompra.reduce((sum, item) => {
+  // Cálculo del total estimado del carro usando subtotales reales por envase
+  const totalEstimado = itemsMostrados.reduce((sum, item) => {
     if (item.cantidadAComprar <= 0) return sum;
-    const precio = item.productoManual?.precio ?? item.productoSeleccionado?.precio ?? 0;
-    return sum + precio;
+    const { subtotal } = calcularUnidadesYSubtotal(item);
+    return sum + subtotal;
   }, 0);
 
-  const conteoComprados = itemsCompra.filter((i) => i.comprado).length;
+  const conteoComprados = itemsMostrados.filter((i) => i.comprado).length;
 
   return (
     <div className={`space-y-6 max-w-4xl mx-auto pb-24 ${modoTienda ? 'text-lg' : ''}`}>
+      {/* Selector de Período: Mes Completo vs Semana */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center p-1 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
+          <button
+            onClick={() => setPeriodo('mes')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              periodo === 'mes'
+                ? 'bg-[var(--accent-protein)] text-black font-extrabold shadow-xs'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            📅 Mes Completo (4 Semanas)
+          </button>
+          <button
+            onClick={() => setPeriodo('semana')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              periodo === 'semana'
+                ? 'bg-[var(--accent-protein)] text-black font-extrabold shadow-xs'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            📆 Semana Actual (7 Días)
+          </button>
+        </div>
+
+        <span className="text-xs text-[var(--text-muted)] font-medium">
+          {periodo === 'mes'
+            ? 'Total de 28 días con rotación diaria de recetas'
+            : 'Solo compras para los próximos 7 días'}
+        </span>
+      </div>
+
       {/* Barra Superior de Control y Total */}
       <div className="sticky top-[60px] z-30 p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-md space-y-3">
         <div className="flex items-center justify-between gap-3">
@@ -142,12 +243,14 @@ export const ComprasView: React.FC<ComprasViewProps> = ({ itemsCompra, onActuali
                 Líder Casona, Osorno
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--bg-elevated)] text-[var(--text-secondary)] tabular-nums">
-                {conteoComprados} de {itemsCompra.length} comprados
+                {conteoComprados} de {itemsMostrados.length} comprados
               </span>
             </div>
             <div className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tabular-nums">
               ${totalEstimado.toLocaleString('es-CL')}{' '}
-              <span className="text-xs font-medium text-[var(--text-muted)]">estimado total</span>
+              <span className="text-xs font-medium text-[var(--text-muted)]">
+                {periodo === 'mes' ? 'total estimado del mes' : 'total estimado semanal'}
+              </span>
             </div>
           </div>
 
@@ -180,7 +283,7 @@ export const ComprasView: React.FC<ComprasViewProps> = ({ itemsCompra, onActuali
           <div
             className="h-full bg-[var(--accent-protein)] transition-all duration-300"
             style={{
-              width: `${itemsCompra.length > 0 ? (conteoComprados / itemsCompra.length) * 100 : 0}%`,
+              width: `${itemsMostrados.length > 0 ? (conteoComprados / itemsMostrados.length) * 100 : 0}%`,
             }}
           />
         </div>
@@ -210,6 +313,7 @@ export const ComprasView: React.FC<ComprasViewProps> = ({ itemsCompra, onActuali
                   const prod = item.productoSeleccionado;
                   const manual = item.productoManual;
                   const precio = manual?.precio ?? prod?.precio;
+                  const { unidades, subtotal, textoPresentacion } = calcularUnidadesYSubtotal(item);
 
                   return (
                     <div
@@ -278,38 +382,60 @@ export const ComprasView: React.FC<ComprasViewProps> = ({ itemsCompra, onActuali
                             modoTienda ? 'text-base sm:text-lg' : 'text-sm'
                           } ${item.comprado ? 'line-through text-[var(--text-muted)]' : ''}`}
                         >
-                          {item.ingredienteNombre}
+                          {prod ? prod.nombre : item.ingredienteNombre}
                         </h4>
 
-                        {/* Cantidad requerida y despensa */}
-                        <div className="text-xs text-[var(--text-secondary)] tabular-nums flex items-center gap-2 mt-0.5">
+                        {/* Detalle de marca, ingrediente del plan y enlace a Líder */}
+                        <div className="text-xs text-[var(--text-secondary)] tabular-nums flex items-center gap-2 mt-0.5 flex-wrap">
+                          {prod?.marca && (
+                            <span className="font-semibold text-[var(--text-primary)] text-[11px] px-1.5 py-0.2 rounded bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
+                              {prod.marca}
+                            </span>
+                          )}
                           <span className="font-semibold text-[var(--text-primary)]">
                             Comprar: {item.cantidadAComprar} {item.unidad}
                           </span>
+                          {textoPresentacion && (
+                            <span className="font-semibold text-[var(--accent-carb)] text-[11px] px-1.5 py-0.2 rounded bg-[var(--accent-carb)]/10">
+                              Llevar: {textoPresentacion}
+                            </span>
+                          )}
                           {item.enDespensa > 0 && (
                             <span className="text-[var(--text-muted)] text-[11px]">
                               (Despensa: {item.enDespensa} {item.unidad})
                             </span>
+                          )}
+                          {prod?.urlProducto && (
+                            <a
+                              href={prod.urlProducto}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[var(--accent-protein)] hover:underline inline-flex items-center gap-0.5 text-[11px]"
+                              title="Ver producto en super.lider.cl"
+                            >
+                              <span>Ver Líder</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
                           )}
                         </div>
                       </div>
 
                       {/* Precio y Edición Manual */}
                       <div className="text-right shrink-0">
-                        {precio !== undefined && precio > 0 ? (
+                        {subtotal > 0 ? (
                           <div className="tabular-nums">
                             <span
                               className={`font-bold text-[var(--text-primary)] ${
                                 modoTienda ? 'text-base sm:text-xl' : 'text-sm'
                               }`}
                             >
-                              ${precio.toLocaleString('es-CL')}
+                              ${subtotal.toLocaleString('es-CL')}
                             </span>
-                            {prod?.precioPorUnidadMedida && (
-                              <span className="block text-[10px] text-[var(--text-muted)]">
-                                {prod.precioPorUnidadMedida}
-                              </span>
-                            )}
+                            <span className="block text-[10px] text-[var(--text-muted)]">
+                              {unidades > 1
+                                ? `${unidades} x $${precio?.toLocaleString('es-CL')}`
+                                : prod?.precioPorUnidadMedida || `$${precio?.toLocaleString('es-CL')}`}
+                            </span>
                           </div>
                         ) : (
                           <button

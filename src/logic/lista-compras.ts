@@ -6,6 +6,7 @@ import type {
   CategoriaPasillo,
   UnidadMedida,
 } from '../types';
+import { obtenerMejorOpcionBase } from '../services/catalogo-lider-base';
 
 interface AcumuladorIngrediente {
   nombre: string;
@@ -182,6 +183,8 @@ export function generarListaCompras(
     const despensaVisible = desdeUnidadBase(enDespensaBase, acum.tipoUnidad);
     const comprarVisible = desdeUnidadBase(aComprarBase, acum.tipoUnidad);
 
+    const productoLider = obtenerMejorOpcionBase(acum.terminoBusquedaLider || nombre);
+
     itemsCompra.push({
       id: `compra_${fechaSemana}_${nombre.replace(/\s+/g, '_').toLowerCase()}`,
       ingredienteNombre: nombre,
@@ -192,6 +195,7 @@ export function generarListaCompras(
       fechaSemana,
       enDespensa: despensaVisible.cantidad,
       cantidadAComprar: comprarVisible.cantidad,
+      productoSeleccionado: productoLider,
     });
   }
 

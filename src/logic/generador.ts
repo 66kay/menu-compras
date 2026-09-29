@@ -100,16 +100,18 @@ export function calcularMacrosConsumidosDia(planDia: PlanDia): Macros {
 }
 
 /**
- * Generador de Plan Semanal Inteligente
+ * Generador de Plan Semanal o Mensual Inteligente
+ * Garantiza variedad diaria en todas las comidas sin repetir recetas consecutivas.
  */
 export function generarSemana(
   fechaInicioLunes: string, // YYYY-MM-DD
   perfil: PerfilUsuario,
   recetasDisponibles: Receta[],
   planesExistentes: PlanDia[] = [],
-  usarBatchCooking: boolean = true
+  _usarBatchCooking: boolean = false,
+  cantidadDias: number = 7
 ): PlanDia[] {
-  // Filtrar recetas seguras sin legumbres
+  // Filtrar recetas seguras sin legumbres ni alimentos odiados
   const recetasValidas = recetasDisponibles.filter((r) => esRecetaPermitida(r, perfil));
 
   const desayunos = recetasValidas.filter((r) => r.categoria === 'desayuno');
@@ -120,19 +122,15 @@ export function generarSemana(
 
   // Determinar días de gym según frecuencia (ej: 4 días = Lun, Mar, Jue, Vie; 5 días = Lun, Mar, Mié, Vie, Sáb)
   const esGymPorDiaIndice = (diaIdx: number): boolean => {
-    if (perfil.diasGymSemana === 4) return diaIdx === 0 || diaIdx === 1 || diaIdx === 3 || diaIdx === 4; // Lun, Mar, Jue, Vie
-    if (perfil.diasGymSemana === 5) return diaIdx === 0 || diaIdx === 1 || diaIdx === 2 || diaIdx === 4 || diaIdx === 5; // Lun, Mar, Mié, Vie, Sáb
-    if (perfil.diasGymSemana === 3) return diaIdx === 0 || diaIdx === 2 || diaIdx === 4; // Lun, Mié, Vie
-    return diaIdx < perfil.diasGymSemana;
+    const diaMod = diaIdx % 7;
+    if (perfil.diasGymSemana === 4) return diaMod === 0 || diaMod === 1 || diaMod === 3 || diaMod === 4; // Lun, Mar, Jue, Vie
+    if (perfil.diasGymSemana === 5) return diaMod === 0 || diaMod === 1 || diaMod === 2 || diaMod === 4 || diaMod === 5; // Lun, Mar, Mié, Vie, Sáb
+    if (perfil.diasGymSemana === 3) return diaMod === 0 || diaMod === 2 || diaMod === 4; // Lun, Mié, Vie
+    return diaMod < perfil.diasGymSemana;
   };
 
   const resultadoSemana: PlanDia[] = [];
   const fechaBase = new Date(fechaInicioLunes + 'T00:00:00');
-
-  // Selección de batch cooking si está activo
-  const almuerzoBatch = usarBatchCooking
-    ? almuerzos.find((r) => r.batchCooking) ?? almuerzos[0]
-    : null;
 
   let almuerzoIdx = 0;
   let cenaIdx = 0;
@@ -140,7 +138,7 @@ export function generarSemana(
   let onceIdx = 0;
   let colacionIdx = 0;
 
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < cantidadDias; i++) {
     const fechaDia = new Date(fechaBase);
     fechaDia.setDate(fechaDia.getDate() + i);
     const fechaISO = fechaDia.toISOString().split('T')[0] || '';
@@ -169,14 +167,8 @@ export function generarSemana(
     // Almuerzo (Pre-Entreno en días de gym: energía limpia para 2 horas de entrenamiento de fuerza)
     let almuerzo = planExistente?.comidas.almuerzo;
     if (!almuerzo || !almuerzo.fijada) {
-      // Si usamos batch cooking en lunes y martes
-      const rec =
-        (usarBatchCooking && almuerzoBatch && (i === 0 || i === 1)
-          ? almuerzoBatch
-          : almuerzos[almuerzoIdx % almuerzos.length])!;
-      if (!(usarBatchCooking && (i === 0 || i === 1))) {
-        almuerzoIdx++;
-      }
+      const rec = almuerzos[almuerzoIdx % almuerzos.length]!;
+      almuerzoIdx++;
       almuerzo = {
         id: `alm_${fechaISO}_${rec.id}`,
         recetaId: rec.id,
@@ -256,4 +248,18 @@ export function generarSemana(
   }
 
   return resultadoSemana;
+}
+
+/**
+ * Generador de Plan Mensual (4 semanas / 28 días)
+ * Rota diariamente todas las recetas (desayunos, almuerzos, colaciones, onces, cenas)
+ * para lograr variedad total durante el mes.
+ */
+export function generarMes(
+  fechaInicioLunes: string,
+  perfil: PerfilUsuario,
+  recetasDisponibles: Receta[],
+  planesExistentes: PlanDia[] = []
+): PlanDia[] {
+  return generarSemana(fechaInicioLunes, perfil, recetasDisponibles, planesExistentes, false, 28);
 }

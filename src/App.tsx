@@ -16,8 +16,9 @@ import { SemanaView } from './components/semana/SemanaView';
 import { ComprasView } from './components/compras/ComprasView';
 import { RecetasView } from './components/recetas/RecetasView';
 import { MetasView } from './components/metas/MetasView';
-import { generarSemana } from './logic/generador';
+import { generarMes } from './logic/generador';
 import { generarListaCompras } from './logic/lista-compras';
+import { obtenerMejorOpcionBase } from './services/catalogo-lider-base';
 
 function getLunesDeEstaSemana(fecha: Date = new Date()): string {
   const d = new Date(fecha);
@@ -61,34 +62,51 @@ export const App: React.FC = () => {
       const regs = await db.registros.toArray();
       setRegistrosProgreso(regs);
 
-      // Cargar planes de la semana
+      // Cargar planes del mes completo (28 días / 4 semanas)
       let planes = await db.plan
         .filter((plan) => {
           const d = new Date(plan.fecha + 'T00:00:00');
           const lunes = new Date(fechaLunesActual + 'T00:00:00');
           const diffDays = (d.getTime() - lunes.getTime()) / (1000 * 60 * 60 * 24);
-          return diffDays >= 0 && diffDays < 7;
+          return diffDays >= 0 && diffDays < 28;
         })
         .toArray();
 
-      // Si hay perfil y recetas pero no hay planes generados aún para la semana, generarlos
-      if (p && r.length > 0 && planes.length === 0) {
-        const nuevosPlanes = generarSemana(fechaLunesActual, p, r, [], true);
+      // Si no hay 28 días completos generados o si venían con recetas repetidas, generamos el mes completo
+      const debeRegenerarMes = planes.length < 28;
+      if (p && r.length > 0 && debeRegenerarMes) {
+        const nuevosPlanes = generarMes(fechaLunesActual, p, r, planes);
         await db.plan.bulkPut(nuevosPlanes);
         planes = nuevosPlanes;
       }
       setPlanesSemana(planes);
 
-      // Cargar compras
+      // Cargar o generar lista de compras para el mes completo
       let compras = await db.compras
         .filter((c) => c.fechaSemana === fechaLunesActual)
         .toArray();
 
-      if (compras.length === 0 && planes.length > 0 && r.length > 0) {
+      if ((compras.length === 0 || compras.length < 15) && planes.length > 0 && r.length > 0) {
         const nuevaLista = generarListaCompras(planes, r, desp, fechaLunesActual);
         if (nuevaLista.length > 0) {
+          await db.compras.clear();
           await db.compras.bulkPut(nuevaLista);
           compras = nuevaLista;
+        }
+      } else if (compras.length > 0) {
+        // Asegurar que cada ítem tenga su producto real de Líder con foto y precio vigente
+        let cambio = false;
+        for (const item of compras) {
+          if (!item.productoSeleccionado || !item.productoSeleccionado.urlFoto.includes('walmartimages.cl')) {
+            const mejor = obtenerMejorOpcionBase(item.ingredienteNombre);
+            if (mejor) {
+              item.productoSeleccionado = mejor;
+              cambio = true;
+            }
+          }
+        }
+        if (cambio) {
+          await db.compras.bulkPut(compras);
         }
       }
       setItemsCompra(compras);
@@ -132,13 +150,15 @@ export const App: React.FC = () => {
     setPlanesSemana(planes);
   };
 
-  // Recargar tras regenerar semana
+  // Recargar tras regenerar plan
   const handleSemanaGenerada = async () => {
-    const planes = await db.plan.toArray();
-    setPlanesSemana(planes);
+    if (!perfil) return;
+    const nuevosPlanes = generarMes(fechaLunesActual, perfil, recetas, []);
+    await db.plan.bulkPut(nuevosPlanes);
+    setPlanesSemana(nuevosPlanes);
 
-    // Regenerar lista de compras automáticamente
-    const nuevaLista = generarListaCompras(planes, recetas, despensa, fechaLunesActual);
+    // Regenerar lista de compras del mes automáticamente
+    const nuevaLista = generarListaCompras(nuevosPlanes, recetas, despensa, fechaLunesActual);
     await db.compras.clear();
     await db.compras.bulkPut(nuevaLista);
     setItemsCompra(nuevaLista);
@@ -222,6 +242,10 @@ export const App: React.FC = () => {
           {tabActiva === 'compras' && (
             <ComprasView
               itemsCompra={itemsCompra}
+              planesSemana={planesSemana}
+              recetas={recetas}
+              despensa={despensa}
+              fechaLunesActual={fechaLunesActual}
               onActualizarItems={handleActualizarCompras}
             />
           )}

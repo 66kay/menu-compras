@@ -142,12 +142,12 @@ export function generarSemana(
         porciones: 1,
         fijada: false,
         consumida: false,
-        tipoMomentoEntreno: esDiaGym && rec.aptaPreEntreno ? 'pre_entreno' : 'ninguno',
+        tipoMomentoEntreno: 'ninguno',
         macros: rec.macrosPorPorcion,
       };
     }
 
-    // Almuerzo
+    // Almuerzo (Pre-Entreno en días de gym: energía limpia para 2 horas de entrenamiento de fuerza)
     let almuerzo = planExistente?.comidas.almuerzo;
     if (!almuerzo || !almuerzo.fijada) {
       // Si usamos batch cooking en lunes y martes
@@ -165,12 +165,12 @@ export function generarSemana(
         porciones: 1,
         fijada: false,
         consumida: false,
-        tipoMomentoEntreno: esDiaGym && rec.aptaPostEntreno ? 'post_entreno' : 'ninguno',
+        tipoMomentoEntreno: esDiaGym ? 'pre_entreno' : 'ninguno',
         macros: rec.macrosPorPorcion,
       };
     }
 
-    // Colación
+    // Colación (Post-Entreno en días de gym: asimilación rápida de proteína y glucógeno tras el entrenamiento)
     let colacion = planExistente?.comidas.colacion;
     if (!colacion || !colacion.fijada) {
       const rec = colaciones[colacionIdx % colaciones.length]!;
@@ -182,7 +182,7 @@ export function generarSemana(
         porciones: 1,
         fijada: false,
         consumida: false,
-        tipoMomentoEntreno: esDiaGym && !desayuno.tipoMomentoEntreno && rec.aptaPreEntreno ? 'pre_entreno' : 'ninguno',
+        tipoMomentoEntreno: esDiaGym ? 'post_entreno' : 'ninguno',
         macros: rec.macrosPorPorcion,
       };
     }

@@ -36,14 +36,19 @@ export class MenuComprasDB extends Dexie {
 export const db = new MenuComprasDB();
 
 /**
- * Inicializa la base de datos local (IndexedDB) sembrando las 40 recetas chilenas/gym
- * estrictamente sin legumbres si la tabla está vacía.
+ * Inicializa la base de datos local (IndexedDB) sembrando o actualizando las 40 recetas chilenas/gym
+ * ultra rápidas (2-15 min, 1 sartén/olla, microondas o licuadora) estrictamente sin legumbres.
  */
 export async function inicializarBaseDatos(): Promise<void> {
   try {
+    const RECETAS_VERSION = 'v2-express-timing';
+    const versionGuardada = localStorage.getItem('menu_recetas_version');
     const conteoRecetas = await db.recetas.count();
-    if (conteoRecetas === 0) {
-      await db.recetas.bulkAdd(SEMILLAS_RECETAS);
+
+    if (conteoRecetas === 0 || versionGuardada !== RECETAS_VERSION) {
+      // bulkPut inserta o actualiza las semillas por su ID único sin tocar recetas personalizadas del usuario
+      await db.recetas.bulkPut(SEMILLAS_RECETAS);
+      localStorage.setItem('menu_recetas_version', RECETAS_VERSION);
     }
   } catch (error) {
     console.error('Error al inicializar la base de datos IndexedDB:', error);

@@ -78,15 +78,16 @@ describe('Exclusión Estricta de Legumbres y Validación de Recetas', () => {
   });
 
   it('esRecetaPermitida rechaza automáticamente recetas que contengan legumbres o ingredientes excluidos', () => {
+    const baseReceta = SEMILLAS_RECETAS[0]!;
     const recetaConLentejas = {
-      ...SEMILLAS_RECETAS[0],
+      ...baseReceta,
       id: 'test-lentejas',
       nombre: 'Guiso de lentejas con zapallo',
     };
     expect(esRecetaPermitida(recetaConLentejas, perfilBase)).toBe(false);
 
     const recetaConGarbanzos = {
-      ...SEMILLAS_RECETAS[0],
+      ...baseReceta,
       id: 'test-garbanzos',
       ingredientes: [
         {

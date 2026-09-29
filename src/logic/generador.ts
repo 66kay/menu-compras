@@ -124,7 +124,7 @@ export function generarSemana(
   for (let i = 0; i < 7; i++) {
     const fechaDia = new Date(fechaBase);
     fechaDia.setDate(fechaDia.getDate() + i);
-    const fechaISO = fechaDia.toISOString().split('T')[0];
+    const fechaISO = fechaDia.toISOString().split('T')[0] || '';
 
     const planExistente = planesExistentes.find((p) => p.fecha === fechaISO);
     const esDiaGym = esGymPorDiaIndice(i);
@@ -133,7 +133,7 @@ export function generarSemana(
     // Desayuno
     let desayuno = planExistente?.comidas.desayuno;
     if (!desayuno || !desayuno.fijada) {
-      const rec = desayunos[desayunoIdx % desayunos.length];
+      const rec = desayunos[desayunoIdx % desayunos.length]!;
       desayunoIdx++;
       desayuno = {
         id: `des_${fechaISO}_${rec.id}`,
@@ -152,9 +152,9 @@ export function generarSemana(
     if (!almuerzo || !almuerzo.fijada) {
       // Si usamos batch cooking en lunes y martes
       const rec =
-        usarBatchCooking && almuerzoBatch && (i === 0 || i === 1)
+        (usarBatchCooking && almuerzoBatch && (i === 0 || i === 1)
           ? almuerzoBatch
-          : almuerzos[almuerzoIdx % almuerzos.length];
+          : almuerzos[almuerzoIdx % almuerzos.length])!;
       if (!(usarBatchCooking && (i === 0 || i === 1))) {
         almuerzoIdx++;
       }
@@ -173,7 +173,7 @@ export function generarSemana(
     // Colación
     let colacion = planExistente?.comidas.colacion;
     if (!colacion || !colacion.fijada) {
-      const rec = colaciones[colacionIdx % colaciones.length];
+      const rec = colaciones[colacionIdx % colaciones.length]!;
       colacionIdx++;
       colacion = {
         id: `col_${fechaISO}_${rec.id}`,
@@ -190,7 +190,7 @@ export function generarSemana(
     // Once
     let once = planExistente?.comidas.once;
     if (!once || !once.fijada) {
-      const rec = onces[onceIdx % onces.length];
+      const rec = onces[onceIdx % onces.length]!;
       onceIdx++;
       once = {
         id: `onc_${fechaISO}_${rec.id}`,
@@ -207,7 +207,7 @@ export function generarSemana(
     // Cena
     let cena = planExistente?.comidas.cena;
     if (!cena || !cena.fijada) {
-      const rec = cenas[cenaIdx % cenas.length];
+      const rec = cenas[cenaIdx % cenas.length]!;
       cenaIdx++;
       cena = {
         id: `cen_${fechaISO}_${rec.id}`,

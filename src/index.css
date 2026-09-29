@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-base: #F9F7F2;
+    --bg-surface: #FFFFFF;
+    --bg-elevated: #F2EFE9;
+    --border-subtle: #E6E2DA;
+    --text-primary: #1C1917;
+    --text-secondary: #57534E;
+    --text-muted: #8C867E;
+    --accent-protein: #3F6212;
+    --accent-carb: #C2410C;
+    --accent-fat: #B45309;
+    --accent-action: #1C1917;
+  }
+
+  .dark {
+    --bg-base: #0C0A09;
+    --bg-surface: #171513;
+    --bg-elevated: #211E1B;
+    --border-subtle: #2E2A26;
+    --text-primary: #F5F5F4;
+    --text-secondary: #A8A29E;
+    --text-muted: #78716C;
+    --accent-protein: #84CC16;
+    --accent-carb: #FB923C;
+    --accent-fat: #FBBF24;
+    --accent-action: #FAFAFA;
+  }
+
+  * {
+    border-color: var(--border-subtle);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    height: 100%;
+    height: 100dvh;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  }
+
+  /* Números tabulares para datos de macros, calorías y precios */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* Safe Area Insets para iPhone notch e isla dinámica */
+  .safe-top {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+
+  .safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-bottom-nav {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Micro-transición táctil Emil Kowalski */
+.touch-press {
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), opacity 160ms ease;
+}
+
+.touch-press:active {
+  transform: scale(0.965);
+  opacity: 0.92;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

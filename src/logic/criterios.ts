@@ -29,13 +29,15 @@ export function evaluarProducto(prod: Producto): ResultadoEvaluacion {
     fibra: 1,
   };
 
+  const sellos = prod.sellosNegros ?? 0;
+
   // 1. Densidad proteica (0 a 35 pts)
   // 25g+ de proteina por 100g = max score (35)
   const proteinasPor100g = macros.proteinas;
   const densidadProteica = Math.min(35, Math.round((proteinasPor100g / 25) * 35));
 
   // 2. Sellos negros (0 a -30 pts, -8 por sello)
-  const penalizacionSellos = prod.sellosNegros === 0 ? 0 : -Math.min(30, prod.sellosNegros * 8);
+  const penalizacionSellos = sellos === 0 ? 0 : -Math.min(30, sellos * 8);
 
   // 3. Fibra y calidad nutricional (0 a 15 pts)
   const fibra = macros.fibra;
@@ -74,12 +76,12 @@ export function evaluarProducto(prod: Producto): ResultadoEvaluacion {
 
   // Razón explicativa sintética y transparente
   let razon = '';
-  if (prod.sellosNegros === 0 && proteinasPor100g >= 15) {
+  if (sellos === 0 && proteinasPor100g >= 15) {
     razon = 'Excelente: 0 sellos negros y altísima concentración de proteína.';
-  } else if (prod.sellosNegros === 0) {
+  } else if (sellos === 0) {
     razon = 'Perfil limpio sin sellos y buena calidad de macronutrientes.';
-  } else if (prod.sellosNegros > 2) {
-    razon = `Penalizado por tener ${prod.sellosNegros} sellos de advertencia.`;
+  } else if (sellos > 2) {
+    razon = `Penalizado por tener ${sellos} sellos de advertencia.`;
   } else {
     razon = `Buen aporte de proteína (${proteinasPor100g}g/100g) a precio competitivo.`;
   }

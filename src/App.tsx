@@ -22,6 +22,14 @@ import { generarMes } from './logic/generador';
 import { generarListaCompras } from './logic/lista-compras';
 import { fechaALocalISO, getLunesDeEstaSemana } from './logic/fechas';
 import { obtenerMejorOpcionBase } from './services/catalogo-lider-base';
+import {
+  PERFIL_DEFAULT,
+  guardarBackupPerfil,
+  guardarBackupPlan,
+  guardarBackupCompras,
+  guardarBackupRegistros,
+  obtenerBackupPerfil,
+} from './logic/persistencia';
 import { Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -46,13 +54,18 @@ export const App: React.FC = () => {
 
   const fechaLunesActual = getLunesDeEstaSemana();
 
-  // 1. Cargar datos desde IndexedDB
+  // 1. Cargar datos desde IndexedDB con respaldo en localStorage
   const cargarDatos = useCallback(async () => {
     try {
       await inicializarBaseDatos();
 
-      const p = await db.perfil.get('usuario_principal');
-      if (p) setPerfil(p);
+      let p = await db.perfil.get('usuario_principal');
+      if (!p) {
+        p = obtenerBackupPerfil() || PERFIL_DEFAULT;
+        await db.perfil.put(p);
+        guardarBackupPerfil(p);
+      }
+      setPerfil(p);
 
       const r = await db.recetas.toArray();
       setRecetas(r);
@@ -78,7 +91,10 @@ export const App: React.FC = () => {
       if (p && r.length > 0 && debeRegenerarMes) {
         const nuevosPlanes = generarMes(fechaLunesActual, p, r, planes);
         await db.plan.bulkPut(nuevosPlanes);
+        guardarBackupPlan(nuevosPlanes);
         planes = nuevosPlanes;
+      } else if (planes.length > 0) {
+        guardarBackupPlan(planes);
       }
       setPlanesSemana(planes);
 
@@ -108,6 +124,7 @@ export const App: React.FC = () => {
           }
           await db.compras.clear();
           await db.compras.bulkPut(nuevaLista);
+          guardarBackupCompras(nuevaLista);
           compras = nuevaLista;
         }
       } else if (compras.length > 0) {
@@ -125,6 +142,7 @@ export const App: React.FC = () => {
         if (cambio) {
           await db.compras.bulkPut(compras);
         }
+        guardarBackupCompras(compras);
       }
       setItemsCompra(compras);
     } catch (err) {
@@ -141,7 +159,7 @@ export const App: React.FC = () => {
   // Si no hay perfil, mostramos el modal de Onboarding
   const handleOnboardingCompletado = async (nuevoPerfil: PerfilUsuario) => {
     setPerfil(nuevoPerfil);
-    localStorage.setItem('backup_perfil_usuario', JSON.stringify(nuevoPerfil));
+    guardarBackupPerfil(nuevoPerfil);
     await cargarDatos();
   };
 
@@ -162,9 +180,10 @@ export const App: React.FC = () => {
   const caloriasConsumidasHoy = comidasHoy.reduce((sum, c) => sum + (c?.macros.calorias ?? 0), 0);
   const proteinaConsumidaHoy = comidasHoy.reduce((sum, c) => sum + (c?.macros.proteinas ?? 0), 0);
 
-  // Recargar planes tras modificación
+  // Recargar planes tras modificación y sincronizar respaldo local
   const handleActualizarPlan = async () => {
     const planes = await db.plan.toArray();
+    guardarBackupPlan(planes);
     setPlanesSemana(planes);
   };
 
@@ -173,18 +192,21 @@ export const App: React.FC = () => {
     if (!perfil) return;
     const nuevosPlanes = generarMes(fechaLunesActual, perfil, recetas, []);
     await db.plan.bulkPut(nuevosPlanes);
+    guardarBackupPlan(nuevosPlanes);
     setPlanesSemana(nuevosPlanes);
 
     // Regenerar lista de compras del mes automáticamente
     const nuevaLista = generarListaCompras(nuevosPlanes, recetas, despensa, fechaLunesActual);
     await db.compras.clear();
     await db.compras.bulkPut(nuevaLista);
+    guardarBackupCompras(nuevaLista);
     setItemsCompra(nuevaLista);
   };
 
-  // Recargar compras
+  // Recargar compras y sincronizar respaldo local
   const handleActualizarCompras = async () => {
     const compras = await db.compras.toArray();
+    guardarBackupCompras(compras);
     setItemsCompra(compras);
   };
 
@@ -194,9 +216,10 @@ export const App: React.FC = () => {
     setRecetas(r);
   };
 
-  // Recargar registros progreso
+  // Recargar registros progreso y sincronizar respaldo local
   const handleActualizarRegistros = async () => {
     const regs = await db.registros.toArray();
+    guardarBackupRegistros(regs);
     setRegistrosProgreso(regs);
   };
 

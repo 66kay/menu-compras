@@ -9,6 +9,14 @@ import type {
   ItemDespensa,
 } from '../types';
 import { SEMILLAS_RECETAS } from './semillas-recetas';
+import {
+  PERFIL_DEFAULT,
+  obtenerBackupPerfil,
+  guardarBackupPerfil,
+  obtenerBackupPlan,
+  obtenerBackupCompras,
+  obtenerBackupRegistros,
+} from '../logic/persistencia';
 
 export class MenuComprasDB extends Dexie {
   perfil!: EntityTable<PerfilUsuario, 'id'>;
@@ -80,32 +88,48 @@ export async function inicializarBaseDatos(): Promise<void> {
     }
 
     // 2. Respaldo y recuperación resiliente del perfil
-    let p = await db.perfil.get('usuario_principal');
+    let p: PerfilUsuario | undefined = await db.perfil.get('usuario_principal');
     if (!p) {
-      // Intentar restaurar desde respaldo en localStorage si IndexedDB se recreó
-      const backupStr = localStorage.getItem('backup_perfil_usuario');
-      if (backupStr) {
-        try {
-          const perfilRestaurado = JSON.parse(backupStr) as PerfilUsuario;
-          await db.perfil.put(perfilRestaurado);
-          p = perfilRestaurado;
-        } catch (e) {
-          console.warn('Error al restaurar perfil desde localStorage:', e);
-        }
-      }
+      const backup = obtenerBackupPerfil();
+      p = backup ?? PERFIL_DEFAULT;
     }
 
     // Migrar perfil existente asegurando las 2800 kcal exactas y peso atlético de referencia (95 kg)
-    if (p) {
-      const perfilActualizado: PerfilUsuario = {
-        ...p,
-        caloriasPersonalizadas: 2800,
-        pesoReferenciaKg: p.pesoReferenciaKg && p.pesoReferenciaKg <= 110 ? p.pesoReferenciaKg : 95,
-        usaProteinaEnPolvo: p.usaProteinaEnPolvo ?? true,
-        scoopsProteinaDia: p.scoopsProteinaDia ?? 1,
-      };
-      await db.perfil.put(perfilActualizado);
-      localStorage.setItem('backup_perfil_usuario', JSON.stringify(perfilActualizado));
+    const perfilActualizado: PerfilUsuario = {
+      ...p,
+      caloriasPersonalizadas: 2800,
+      pesoReferenciaKg: p.pesoReferenciaKg && p.pesoReferenciaKg <= 110 ? p.pesoReferenciaKg : 95,
+      usaProteinaEnPolvo: p.usaProteinaEnPolvo ?? true,
+      scoopsProteinaDia: p.scoopsProteinaDia ?? 1,
+    };
+    await db.perfil.put(perfilActualizado);
+    guardarBackupPerfil(perfilActualizado);
+
+    // 3. Restaurar planes si no existen en IndexedDB pero existen en localStorage
+    const conteoPlanes = await db.plan.count();
+    if (conteoPlanes === 0) {
+      const backupPlanes = obtenerBackupPlan();
+      if (backupPlanes && backupPlanes.length > 0) {
+        await db.plan.bulkPut(backupPlanes);
+      }
+    }
+
+    // 4. Restaurar compras si no existen en IndexedDB pero existen en localStorage
+    const conteoCompras = await db.compras.count();
+    if (conteoCompras === 0) {
+      const backupCompras = obtenerBackupCompras();
+      if (backupCompras && backupCompras.length > 0) {
+        await db.compras.bulkPut(backupCompras);
+      }
+    }
+
+    // 5. Restaurar registros de progreso si no existen en IndexedDB pero existen en localStorage
+    const conteoRegistros = await db.registros.count();
+    if (conteoRegistros === 0) {
+      const backupRegs = obtenerBackupRegistros();
+      if (backupRegs && backupRegs.length > 0) {
+        await db.registros.bulkPut(backupRegs);
+      }
     }
   } catch (error) {
     console.error('Error al inicializar la base de datos IndexedDB:', error);

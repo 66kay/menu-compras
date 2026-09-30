@@ -8,6 +8,11 @@ import {
   Trash2,
   Check,
   Coffee,
+  Smartphone,
+  Download,
+  Upload,
+  Copy,
+  ShieldCheck,
 } from 'lucide-react';
 import type {
   PerfilUsuario,
@@ -19,6 +24,12 @@ import { calcularMetasBase } from '../../logic/nutricion';
 import { calcularMediaMovil, analizarTendenciaYGenerarSugerencia } from '../../logic/progreso';
 import { db } from '../../db';
 import { fechaALocalISO } from '../../logic/fechas';
+import {
+  exportarRespaldoCompletoJSON,
+  restaurarRespaldoCompletoJSON,
+  guardarBackupPerfil,
+  guardarBackupRegistros,
+} from '../../logic/persistencia';
 
 interface MetasViewProps {
   perfil: PerfilUsuario;
@@ -86,7 +97,55 @@ export const MetasView: React.FC<MetasViewProps> = ({
     mediaMovil ?? pesoActualKg
   );
 
-  // Guardar perfil
+  // Estado y funciones de respaldo para teléfono
+  const [modalRestaurar, setModalRestaurar] = useState<boolean>(false);
+  const [textoRestaurar, setTextoRestaurar] = useState<string>('');
+  const [notificacionRespaldo, setNotificacionRespaldo] = useState<string | null>(null);
+
+  const handleCopiarRespaldo = async () => {
+    try {
+      const json = await exportarRespaldoCompletoJSON();
+      await navigator.clipboard.writeText(json);
+      setNotificacionRespaldo('¡Copia de seguridad copiada al portapapeles!');
+      setTimeout(() => setNotificacionRespaldo(null), 3500);
+    } catch {
+      setNotificacionRespaldo('No se pudo copiar automáticamente. Usa descargar.');
+    }
+  };
+
+  const handleDescargarRespaldo = async () => {
+    try {
+      const json = await exportarRespaldoCompletoJSON();
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `respaldo-menu-compras-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setNotificacionRespaldo('Archivo de respaldo descargado.');
+      setTimeout(() => setNotificacionRespaldo(null), 3500);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleEjecutarRestauracion = async () => {
+    if (!textoRestaurar.trim()) return;
+    const res = await restaurarRespaldoCompletoJSON(textoRestaurar.trim());
+    if (res.exito) {
+      setNotificacionRespaldo('✓ Respaldo restaurado exitosamente.');
+      setModalRestaurar(false);
+      setTextoRestaurar('');
+      setTimeout(() => {
+        window.location.reload();
+      }, 700);
+    } else {
+      alert(res.mensaje);
+    }
+  };
+
+  // Guardar perfil con sincronización dual (IndexedDB + localStorage)
   const handleGuardarPerfil = async (e: React.FormEvent) => {
     e.preventDefault();
     const actualizado: PerfilUsuario = {
@@ -94,12 +153,13 @@ export const MetasView: React.FC<MetasViewProps> = ({
       actualizadoEn: new Date().toISOString(),
     };
     await db.perfil.put(actualizado);
+    guardarBackupPerfil(actualizado);
     onActualizarPerfil(actualizado);
     setGuardadoExitoso(true);
     setTimeout(() => setGuardadoExitoso(false), 2500);
   };
 
-  // Agregar pesaje
+  // Agregar pesaje con sincronización dual
   const handleAgregarPesaje = async (e: React.FormEvent) => {
     e.preventDefault();
     const pesoNum = Number(pesoInput);
@@ -115,6 +175,8 @@ export const MetasView: React.FC<MetasViewProps> = ({
     };
 
     await db.registros.put(nuevo);
+    const regs = await db.registros.toArray();
+    guardarBackupRegistros(regs);
 
     // Actualizar también peso actual en perfil
     const perfilConNuevoPeso = {
@@ -122,19 +184,22 @@ export const MetasView: React.FC<MetasViewProps> = ({
       pesoActualKg: pesoNum,
     };
     await db.perfil.put(perfilConNuevoPeso);
+    guardarBackupPerfil(perfilConNuevoPeso);
     onActualizarPerfil(perfilConNuevoPeso);
 
     setModalNuevoPeso(false);
     onActualizarRegistros();
   };
 
-  // Eliminar pesaje
+  // Eliminar pesaje con sincronización dual
   const handleEliminarPesaje = async (id: string) => {
     await db.registros.delete(id);
+    const regs = await db.registros.toArray();
+    guardarBackupRegistros(regs);
     onActualizarRegistros();
   };
 
-  // Aceptar sugerencia adaptativa
+  // Aceptar sugerencia adaptativa con sincronización dual
   const handleAplicarSugerencia = async (sug: SugerenciaAjuste) => {
     const nuevoDeficit = perfil.deficitsKcal + sug.deltaCaloriasRecomendado;
     const actualizado: PerfilUsuario = {
@@ -143,6 +208,7 @@ export const MetasView: React.FC<MetasViewProps> = ({
       actualizadoEn: new Date().toISOString(),
     };
     await db.perfil.put(actualizado);
+    guardarBackupPerfil(actualizado);
     onActualizarPerfil(actualizado);
   };
 
@@ -613,6 +679,124 @@ export const MetasView: React.FC<MetasViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Persistencia en Teléfono y Respaldo Resiliente */}
+      <div className="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
+          <div className="flex items-center gap-2">
+            <Smartphone className="w-5 h-5 text-[var(--accent-protein)]" />
+            <div>
+              <h2 className="text-base font-bold text-[var(--text-primary)]">
+                Uso Exclusivo en Teléfono & Respaldo Permanente
+              </h2>
+              <p className="text-xs text-[var(--text-muted)]">
+                Tus datos quedan guardados en la memoria persistente de tu teléfono (IndexedDB + localStorage).
+              </p>
+            </div>
+          </div>
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold border border-emerald-500/20">
+            <ShieldCheck className="w-3.5 h-3.5" /> Persistencia Activa
+          </span>
+        </div>
+
+        {/* Guía de Instalación PWA para Teléfono */}
+        <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-3">
+          <h3 className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[var(--accent-protein)]" />
+            ¿Cómo asegurar que nunca se reinicien tus datos al salir del navegador?
+          </h3>
+          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+            Al abrir enlaces dentro de apps como WhatsApp, el teléfono usa un navegador temporal que puede borrar datos al cerrar. Para usar la app siempre con tus datos intactos:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+              <span className="font-bold text-[var(--text-primary)] block">🍏 En iPhone (Safari):</span>
+              <p className="text-[11px] text-[var(--text-muted)]">
+                Toca el botón <strong>Compartir (⎋)</strong> abajo y elige <strong>"Agregar a pantalla de inicio"</strong>. La app se guardará como aplicación fija con almacenamiento aislado que Apple nunca borrará.
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-subtle)] space-y-1">
+              <span className="font-bold text-[var(--text-primary)] block">🤖 En Android (Chrome):</span>
+              <p className="text-[11px] text-[var(--text-muted)]">
+                Toca los <strong>tres puntos (⋮)</strong> arriba a la derecha y selecciona <strong>"Instalar aplicación"</strong> o <strong>"Agregar a la pantalla principal"</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Notificación de acción de respaldo */}
+        {notificacionRespaldo && (
+          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium flex items-center gap-2 animate-fade-in">
+            <Check className="w-4 h-4" />
+            <span>{notificacionRespaldo}</span>
+          </div>
+        )}
+
+        {/* Botones de Respaldo */}
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button
+            type="button"
+            onClick={handleCopiarRespaldo}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] text-xs font-semibold text-[var(--text-primary)] active:scale-95 transition-all cursor-pointer"
+          >
+            <Copy className="w-4 h-4 text-[var(--text-secondary)]" />
+            <span>Copiar Respaldo</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleDescargarRespaldo}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] text-xs font-semibold text-[var(--text-primary)] active:scale-95 transition-all cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-[var(--text-secondary)]" />
+            <span>Descargar Archivo JSON</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setModalRestaurar(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-all cursor-pointer"
+          >
+            <Upload className="w-4 h-4 text-[var(--text-secondary)]" />
+            <span>Restaurar Copia</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Modal de Restaurar Respaldo */}
+      {modalRestaurar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-2xl space-y-4 text-xs">
+            <div>
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">Restaurar Copia de Seguridad</h3>
+              <p className="text-xs text-[var(--text-muted)]">Pega aquí el contenido JSON de tu respaldo previo.</p>
+            </div>
+
+            <textarea
+              rows={8}
+              value={textoRestaurar}
+              onChange={(e) => setTextoRestaurar(e.target.value)}
+              placeholder="Pega el código JSON de respaldo aquí..."
+              className="w-full p-3 font-mono text-[11px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-primary)]"
+            />
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setModalRestaurar(false)}
+                className="px-3 py-2 rounded-xl text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleEjecutarRestauracion}
+                className="px-4 py-2 rounded-xl bg-[var(--accent-primary)] text-[var(--bg-base)] text-xs font-bold shadow-xs cursor-pointer"
+              >
+                Restaurar Datos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Nuevo Pesaje */}
       {modalNuevoPeso && (

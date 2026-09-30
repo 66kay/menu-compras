@@ -60,8 +60,12 @@ export function calcularUnidadesYSubtotal(item: ItemCompra) {
   let textoPresentacion = '';
 
   const esGranelPorKilo =
-    prod?.nombre.toLowerCase().includes('granel') ||
-    prod?.precioPorUnidadMedida?.toLowerCase().includes('kg');
+    (prod?.nombre.toLowerCase().includes('granel') || prod?.nombre.toLowerCase().startsWith('v ')) &&
+    !prod?.nombre.toLowerCase().includes('lata') &&
+    !prod?.nombre.toLowerCase().includes('tarro') &&
+    !prod?.nombre.toLowerCase().includes('bolsa') &&
+    !prod?.nombre.toLowerCase().includes('pote') &&
+    !prod?.nombre.toLowerCase().includes('bandeja');
 
   if (item.unidad === 'kg' || item.unidad === 'l') {
     const gramosNecesarios = item.cantidadAComprar * 1000;
@@ -115,6 +119,16 @@ export function calcularUnidadesYSubtotal(item: ItemCompra) {
       unidades = Math.max(1, Math.ceil(item.cantidadAComprar / uEnPack));
       subtotal = unidades * precioUnitario;
       textoPresentacion = `${unidades} ${unidades === 1 ? 'pack' : 'packs'} (${uEnPack} un c/u)`;
+    } else if (prod?.nombre.toLowerCase().includes('bolsa') && kgMatch?.[1]) {
+      const kgEnBolsa = parseFloat(kgMatch[1].replace(',', '.'));
+      let gramosPorUnidad = 180;
+      if (nombreNorm.includes('manzana')) gramosPorUnidad = 180;
+      else if (nombreNorm.includes('limón') || nombreNorm.includes('limon')) gramosPorUnidad = 100;
+      else if (nombreNorm.includes('naranja')) gramosPorUnidad = 200;
+      const kgNecesarios = (item.cantidadAComprar * gramosPorUnidad) / 1000;
+      unidades = Math.max(1, Math.ceil(kgNecesarios / kgEnBolsa));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${unidades === 1 ? 'bolsa' : 'bolsas'} (${prod?.cantidadPresentacion || `${kgEnBolsa} kg`})`;
     } else if (esGranelPorKilo) {
       let gramosPorUnidad = 150;
       if (nombreNorm.includes('plátano') || nombreNorm.includes('platano')) gramosPorUnidad = 160;
@@ -334,10 +348,17 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
                 {periodo === 'mes' ? 'total estimado del mes' : 'total estimado semanal'}
               </span>
             </div>
-            {totalEstimado <= 100000 && (
+            {periodo === 'mes' && totalEstimado <= 135000 && (
               <div className="mt-1">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                  ✓ Presupuesto mensual optimizado (Bajo $100.000 CLP)
+                  ✓ Presupuesto mensual optimizado (Bajo $130.000 CLP)
+                </span>
+              </div>
+            )}
+            {periodo === 'semana' && totalEstimado <= 35000 && (
+              <div className="mt-1">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  ✓ Gasto semanal optimizado (~$30.000 CLP)
                 </span>
               </div>
             )}

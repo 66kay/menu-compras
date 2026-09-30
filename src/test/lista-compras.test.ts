@@ -67,16 +67,16 @@ describe('Consolidación de Lista de Compras y Descuento de Despensa', () => {
     const itemPalta = lista.find((i) => i.ingredienteNombre.includes('Palta'));
 
     expect(itemHuevos).toBeDefined();
-    // La receta pide 2 huevos enteros + 2 claras (4 huevos en total al consolidar). Tenemos 1 en despensa. Necesitamos comprar 3.
-    expect(itemHuevos?.cantidadNecesaria).toBe(4);
+    // La receta pide 2 huevos enteros para 1 persona sola. Tenemos 1 en despensa. Necesitamos comprar 1.
+    expect(itemHuevos?.cantidadNecesaria).toBe(2);
     expect(itemHuevos?.enDespensa).toBe(1);
-    expect(itemHuevos?.cantidadAComprar).toBe(3);
+    expect(itemHuevos?.cantidadAComprar).toBe(1);
 
     expect(itemPalta).toBeDefined();
-    // La receta pide 60g de palta. Tenemos 30g en despensa. Necesitamos comprar 30g.
-    expect(itemPalta?.cantidadNecesaria).toBe(60);
+    // La receta pide 40g de palta. Tenemos 30g en despensa. Necesitamos comprar 10g.
+    expect(itemPalta?.cantidadNecesaria).toBe(40);
     expect(itemPalta?.enDespensa).toBe(30);
-    expect(itemPalta?.cantidadAComprar).toBe(30);
+    expect(itemPalta?.cantidadAComprar).toBe(10);
   });
 
   it('un mes completo de 28 días requiere menos de 5 kg de pollo y una semana de compras se mantiene bajo $50.000 CLP', () => {

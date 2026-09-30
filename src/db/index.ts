@@ -42,7 +42,7 @@ export const db = new MenuComprasDB();
  */
 export async function inicializarBaseDatos(): Promise<void> {
   try {
-    const RECETAS_VERSION = 'v5-no-duplicates-real-lider-products';
+    const RECETAS_VERSION = 'v6-budget-130k-granola-mix-ensalada';
     const versionGuardada = localStorage.getItem('menu_recetas_version');
     const conteoRecetas = await db.recetas.count();
 

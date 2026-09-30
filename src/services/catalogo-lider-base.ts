@@ -7,6 +7,58 @@ import type { Producto, CategoriaPasillo } from '../types';
  */
 export const CATALOGO_LIDER_BASE: Producto[] = [
   {
+    "id": "lid-00780410010991",
+    "sku": "00780410010991",
+    "nombre": "Granola Miel y Almendra Bolsa, 320 g",
+    "marca": "Quaker",
+    "precio": 2590,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/b5bf5a41-2c09-4ce8-b541-692ceecbe9cb.333a4c02787eaae718d7ef2541a77465.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/cereales-y-granolas/00780410010991",
+    "categoriaPasillo": "panaderia_cereales",
+    "fechaActualizacion": "2026-09-29T23:30:00.000Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 90,
+    "sellosNegros": 1,
+    "cantidadPresentacion": "320 g",
+    "precioPorUnidadMedida": "$8.094 x kg",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "granola miel almendra quaker cereal",
+    "macros100g": {
+      "calorias": 420,
+      "proteinas": 10,
+      "carbohidratos": 68,
+      "grasas": 12,
+      "fibra": 7
+    }
+  },
+  {
+    "id": "lid-00780463617025",
+    "sku": "00780463617025",
+    "nombre": "Ensalada Toscana Fresca Bolsa, 300 g",
+    "marca": "Fresh Cut",
+    "precio": 1790,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/9452b4dc-ca56-4c4f-9e67-d8c7c94fa25d.3828753239a5caea302273919e984f85.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/verduras/00780463617025",
+    "categoriaPasillo": "frutas_verduras",
+    "fechaActualizacion": "2026-09-29T23:30:00.000Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 98,
+    "sellosNegros": 0,
+    "cantidadPresentacion": "300 g",
+    "precioPorUnidadMedida": "$5.967 x kg",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "ensalada toscana mix lechugas ensalada fresca",
+    "macros100g": {
+      "calorias": 22,
+      "proteinas": 1.8,
+      "carbohidratos": 3.5,
+      "grasas": 0.3,
+      "fibra": 2.1
+    }
+  },
+  {
     "id": "lid-00780467391411",
     "sku": "00780467391411",
     "nombre": "Suplemento de proteína Whey chocolate tarro, 653 g",
@@ -5153,6 +5205,18 @@ export function obtenerMejorOpcionBase(
     );
     if (aceiteEconomico) return aceiteEconomico;
   }
+  if (norm.includes('granola')) {
+    const granolaProd = candidatos.find(
+      (p) => p.sku === '00780410010991' || (p.nombre.toLowerCase().includes('granola') && !p.nombre.toLowerCase().includes('yogurt'))
+    );
+    if (granolaProd) return granolaProd;
+  }
+  if (norm.includes('ensalada') || norm.includes('mix') || norm.includes('toscana') || norm.includes('lechuga')) {
+    const ensaladaProd = candidatos.find(
+      (p) => p.sku === '00780463617025' || p.nombre.toLowerCase().includes('ensalada toscana') || p.nombre.toLowerCase().includes('ensalada')
+    );
+    if (ensaladaProd) return ensaladaProd;
+  }
   if (norm.includes('avena')) {
     const avenaBolsa = candidatos.find(
       (p) =>
@@ -5163,6 +5227,10 @@ export function obtenerMejorOpcionBase(
     if (avenaBolsa) return avenaBolsa;
   }
   if (norm.includes('espinaca')) {
+    const ensaladaAlt = candidatos.find(
+      (p) => p.sku === '00780463617025' || p.nombre.toLowerCase().includes('ensalada toscana')
+    );
+    if (ensaladaAlt) return ensaladaAlt;
     const espinaca150 = candidatos.find(
       (p) => (p.cantidadPresentacion === '150 g' || p.nombre.includes('150 g')) && p.precio < 2500
     );

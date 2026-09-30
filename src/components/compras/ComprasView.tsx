@@ -21,7 +21,6 @@ import {
 import type { ItemCompra, CategoriaPasillo, PlanDia, Receta, ItemDespensa } from '../../types';
 import { TITULOS_PASILLOS, generarListaCompras } from '../../logic/lista-compras';
 import { db } from '../../db';
-import { liderProvider } from '../../services/precios';
 
 interface ComprasViewProps {
   itemsCompra: ItemCompra[];
@@ -50,7 +49,9 @@ export function calcularUnidadesYSubtotal(item: ItemCompra) {
   const lMatch = textoParaBuscar.match(/(\d+(?:[.,]\d+)?)\s*l\b/i);
   const mlMatch = textoParaBuscar.match(/(\d+)\s*ml\b/i);
 
-  if (gMatch?.[1]) gramosEnvase = parseInt(gMatch[1], 10);
+  if (prod?.sku === '00002100008105') gramosEnvase = 1262;
+  else if (prod?.sku === '00780461085377') gramosEnvase = 180;
+  else if (gMatch?.[1]) gramosEnvase = parseInt(gMatch[1], 10);
   else if (mlMatch?.[1]) gramosEnvase = parseInt(mlMatch[1], 10);
   else if (kgMatch?.[1]) gramosEnvase = Math.round(parseFloat(kgMatch[1].replace(',', '.')) * 1000);
   else if (lMatch?.[1]) gramosEnvase = Math.round(parseFloat(lMatch[1].replace(',', '.')) * 1000);
@@ -167,7 +168,6 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
 }) => {
   const [periodo, setPeriodo] = useState<'mes' | 'semana'>('mes');
   const [modoTienda, setModoTienda] = useState<boolean>(false);
-  const [sincronizando, setSincronizando] = useState<boolean>(false);
   const [itemEditandoManual, setItemEditandoManual] = useState<ItemCompra | null>(null);
   const [precioManualInput, setPrecioManualInput] = useState<string>('');
 
@@ -214,27 +214,6 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
     onActualizarItems();
   };
 
-  // Sincronizar precios con Líder
-  const handleSincronizarPrecios = async () => {
-    setSincronizando(true);
-    try {
-      for (const item of itemsMostrados) {
-        if (!item.productoSeleccionado && !item.productoManual) {
-          const productos = await liderProvider.buscar(item.ingredienteNombre);
-          if (productos.length > 0) {
-            item.productoSeleccionado = productos[0];
-            await db.compras.put(item);
-          }
-        }
-      }
-      onActualizarItems();
-    } catch (err) {
-      console.error('Error al sincronizar precios Líder:', err);
-    } finally {
-      setSincronizando(false);
-    }
-  };
-
   // Limpiar y regenerar lista desde cero con productos reales verificados y sin condimentos duplicados
   const [regenerando, setRegenerando] = useState<boolean>(false);
   const handleRegenerarListaLimpia = async () => {
@@ -242,6 +221,14 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
     setRegenerando(true);
     try {
       const nuevaLista = generarListaCompras(planesSemana, recetas, despensa, fechaLunesActual);
+      const compradosPrevios = new Set(
+        itemsCompra.filter((i) => i.comprado).map((i) => i.ingredienteNombre.toLowerCase())
+      );
+      for (const item of nuevaLista) {
+        if (compradosPrevios.has(item.ingredienteNombre.toLowerCase())) {
+          item.comprado = true;
+        }
+      }
       await db.compras.clear();
       await db.compras.bulkPut(nuevaLista);
       onActualizarItems();
@@ -380,20 +367,11 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
             <button
               onClick={handleRegenerarListaLimpia}
               disabled={regenerando}
-              title="Limpiar y regenerar lista con productos reales de Líder, porciones exactas y sin condimentos duplicados"
+              title="Recalcular lista de compras del mes y sincronizar precios de Líder Osorno según tu menú planificado"
               className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--accent-protein)] border border-[var(--border-subtle)] transition-all cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${regenerando ? 'animate-spin text-[var(--accent-protein)]' : ''}`} />
-              <span className="hidden sm:inline">Limpiar &amp; Recalcular</span>
-            </button>
-
-            <button
-              onClick={handleSincronizarPrecios}
-              disabled={sincronizando}
-              title="Actualizar cotización de precios Líder"
-              className="w-10 h-10 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <RefreshCw className={`w-4 h-4 ${sincronizando ? 'animate-spin text-[var(--accent-protein)]' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${regenerando ? 'animate-spin text-[var(--accent-protein)]' : ''}`} />
+              <span className="hidden sm:inline">Recalcular Lista</span>
             </button>
           </div>
         </div>

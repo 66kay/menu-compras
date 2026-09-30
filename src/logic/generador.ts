@@ -6,6 +6,7 @@ import type {
   Macros,
 } from '../types';
 import { calcularMetasDia } from './nutricion';
+import { sumarDiasISO } from './fechas';
 
 const PALABRAS_PROHIBIDAS_LEGUMBRES = [
   'lenteja',
@@ -130,7 +131,6 @@ export function generarSemana(
   };
 
   const resultadoSemana: PlanDia[] = [];
-  const fechaBase = new Date(fechaInicioLunes + 'T00:00:00');
 
   let almuerzoIdx = 0;
   let cenaIdx = 0;
@@ -139,9 +139,7 @@ export function generarSemana(
   let colacionIdx = 0;
 
   for (let i = 0; i < cantidadDias; i++) {
-    const fechaDia = new Date(fechaBase);
-    fechaDia.setDate(fechaDia.getDate() + i);
-    const fechaISO = fechaDia.toISOString().split('T')[0] || '';
+    const fechaISO = sumarDiasISO(fechaInicioLunes, i);
 
     const planExistente = planesExistentes.find((p) => p.fecha === fechaISO);
     const esDiaGym = esGymPorDiaIndice(i);

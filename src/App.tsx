@@ -20,16 +20,9 @@ import { ChatbotNutricionalModal } from './components/ia/ChatbotNutricionalModal
 import { ModalDetalleReceta } from './components/recetas/ModalDetalleReceta';
 import { generarMes } from './logic/generador';
 import { generarListaCompras } from './logic/lista-compras';
+import { fechaALocalISO, getLunesDeEstaSemana } from './logic/fechas';
 import { obtenerMejorOpcionBase } from './services/catalogo-lider-base';
 import { Sparkles } from 'lucide-react';
-
-function getLunesDeEstaSemana(fecha: Date = new Date()): string {
-  const d = new Date(fecha);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  return d.toISOString().split('T')[0] || '';
-}
 
 export const App: React.FC = () => {
   const [cargando, setCargando] = useState<boolean>(true);
@@ -41,9 +34,7 @@ export const App: React.FC = () => {
   const [despensa, setDespensa] = useState<ItemDespensa[]>([]);
 
   const [tabActiva, setTabActiva] = useState<TabId>('hoy');
-  const [fechaSeleccionada, setFechaSeleccionada] = useState<string>(
-    () => new Date().toISOString().split('T')[0] || ''
-  );
+  const [fechaSeleccionada, setFechaSeleccionada] = useState<string>(() => fechaALocalISO());
   const [recetaDetalle, setRecetaDetalle] = useState<Receta | null>(null);
   const [modalChatbotAbierto, setModalChatbotAbierto] = useState<boolean>(false);
   const [ingredienteChatbot, setIngredienteChatbot] = useState<string | undefined>(undefined);
@@ -109,6 +100,12 @@ export const App: React.FC = () => {
       if ((compras.length === 0 || compras.length < 15 || tieneItemsObsoletos) && planes.length > 0 && r.length > 0) {
         const nuevaLista = generarListaCompras(planes, r, desp, fechaLunesActual);
         if (nuevaLista.length > 0) {
+          const compradosPrevios = new Set(compras.filter((c) => c.comprado).map((c) => c.ingredienteNombre.toLowerCase()));
+          for (const item of nuevaLista) {
+            if (compradosPrevios.has(item.ingredienteNombre.toLowerCase())) {
+              item.comprado = true;
+            }
+          }
           await db.compras.clear();
           await db.compras.bulkPut(nuevaLista);
           compras = nuevaLista;
@@ -144,6 +141,7 @@ export const App: React.FC = () => {
   // Si no hay perfil, mostramos el modal de Onboarding
   const handleOnboardingCompletado = async (nuevoPerfil: PerfilUsuario) => {
     setPerfil(nuevoPerfil);
+    localStorage.setItem('backup_perfil_usuario', JSON.stringify(nuevoPerfil));
     await cargarDatos();
   };
 

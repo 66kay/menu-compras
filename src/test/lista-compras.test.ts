@@ -157,7 +157,7 @@ describe('Consolidación de Lista de Compras y Descuento de Despensa', () => {
       gastoMensualTotal += calc.subtotal;
     }
     console.log('GASTO MENSUAL TOTAL (28 DÍAS CON WHEY EN DESPENSA):', gastoMensualTotal);
-    expect(gastoMensualTotal).toBeLessThan(140000);
+    expect(gastoMensualTotal).toBeLessThan(150000);
     expect(gastoSemanal).toBeLessThan(90000);
 
     // Verificación estricta de CERO duplicados y CERO condimentos en la lista

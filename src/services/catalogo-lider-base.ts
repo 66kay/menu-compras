@@ -7,6 +7,58 @@ import type { Producto, CategoriaPasillo } from '../types';
  */
 export const CATALOGO_LIDER_BASE: Producto[] = [
   {
+    "id": "lid-00780461085377",
+    "sku": "00780461085377",
+    "nombre": "Ensalada Mix Toscana Bolsa, 180 g",
+    "marca": "Proverde",
+    "precio": 1090,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/94f76ba3-b664-4ed5-8422-b4f96b9d6abe.0402e1bfec000b8e34bc205d4b2df593.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/verduras/00780461085377",
+    "categoriaPasillo": "frutas_verduras",
+    "fechaActualizacion": "2026-09-30T02:00:00.000Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 99,
+    "sellosNegros": 0,
+    "cantidadPresentacion": "180 g",
+    "precioPorUnidadMedida": "$6.056 x kg",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "ensalada toscana mix proverde lechuga fresca bolsa",
+    "macros100g": {
+      "calorias": 18,
+      "proteinas": 1.5,
+      "carbohidratos": 3.0,
+      "grasas": 0.2,
+      "fibra": 2.0
+    }
+  },
+  {
+    "id": "lid-00002100008105",
+    "sku": "00002100008105",
+    "nombre": "Mayonesa Regular Frasco, 1.262 g",
+    "marca": "Kraft",
+    "precio": 9590,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/6e3df626-7527-4553-b5fd-5387aa037249.8b0a5d0a8887f312af8e2ebc2cc68178.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/salsas/00002100008105",
+    "categoriaPasillo": "despensa_abarrotes",
+    "fechaActualizacion": "2026-09-30T02:00:00.000Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 75,
+    "sellosNegros": 1,
+    "cantidadPresentacion": "1.262 g",
+    "precioPorUnidadMedida": "$7.599 x kg",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "mayonesa regular kraft frasco mayo aderezo",
+    "macros100g": {
+      "calorias": 680,
+      "proteinas": 1.0,
+      "carbohidratos": 2.0,
+      "grasas": 75.0,
+      "fibra": 0
+    }
+  },
+  {
     "id": "lid-00780410010991",
     "sku": "00780410010991",
     "nombre": "Granola Miel y Almendra Bolsa, 320 g",
@@ -5317,6 +5369,14 @@ export function obtenerMejorOpcionBase(
       (p) => p.sku === '00780191603099' || (p.nombre.toLowerCase().includes('pierna') && p.nombre.toLowerCase().includes('jam'))
     );
     if (jamonPierna) return jamonPierna;
+  }
+  if (norm.includes('ensalada') || norm.includes('mix') || norm.includes('toscana')) {
+    const mixProverde = candidatos.find((p) => p.sku === '00780461085377');
+    if (mixProverde) return mixProverde;
+  }
+  if (norm.includes('mayo') || norm.includes('mayonesa') || norm.includes('kraft')) {
+    const mayoKraft = candidatos.find((p) => p.sku === '00002100008105');
+    if (mayoKraft) return mayoKraft;
   }
   if (norm.includes('leche')) {
     const lecheProt1L = candidatos.find(

@@ -42,16 +42,26 @@ export const db = new MenuComprasDB();
  */
 export async function inicializarBaseDatos(): Promise<void> {
   try {
-    const RECETAS_VERSION = 'v9-direct-click-modal-complete-substitutes';
+    // 1. Solicitar almacenamiento persistente al navegador (PWA / Mobile Safari / Chrome)
+    // Esto previene que el sistema operativo o navegador limpie IndexedDB si hay poca memoria libre.
+    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+      try {
+        const esPersistente = await navigator.storage.persisted();
+        if (!esPersistente) {
+          await navigator.storage.persist();
+        }
+      } catch (errPersist) {
+        console.warn('Persistencia de almacenamiento no concedida o no soportada:', errPersist);
+      }
+    }
+
+    const RECETAS_VERSION = 'v10-batch-cooking-meal-prep-kraft-toscana';
     const versionGuardada = localStorage.getItem('menu_recetas_version');
     const conteoRecetas = await db.recetas.count();
 
     if (conteoRecetas === 0 || versionGuardada !== RECETAS_VERSION) {
       // bulkPut inserta o actualiza las semillas por su ID único sin tocar recetas personalizadas del usuario
       await db.recetas.bulkPut(SEMILLAS_RECETAS);
-      // Limpiar planes y lista de compras previas para regenerar con porciones limpias y productos reales de Líder
-      await db.plan.clear();
-      await db.compras.clear();
 
       // Sembrar proteína Whey en despensa si no existe (el usuario ya cuenta con su propio tarro)
       const despExistente = await db.despensa.toArray();
@@ -69,16 +79,33 @@ export async function inicializarBaseDatos(): Promise<void> {
       localStorage.setItem('menu_recetas_version', RECETAS_VERSION);
     }
 
+    // 2. Respaldo y recuperación resiliente del perfil
+    let p = await db.perfil.get('usuario_principal');
+    if (!p) {
+      // Intentar restaurar desde respaldo en localStorage si IndexedDB se recreó
+      const backupStr = localStorage.getItem('backup_perfil_usuario');
+      if (backupStr) {
+        try {
+          const perfilRestaurado = JSON.parse(backupStr) as PerfilUsuario;
+          await db.perfil.put(perfilRestaurado);
+          p = perfilRestaurado;
+        } catch (e) {
+          console.warn('Error al restaurar perfil desde localStorage:', e);
+        }
+      }
+    }
+
     // Migrar perfil existente asegurando las 2800 kcal exactas y peso atlético de referencia (95 kg)
-    const p = await db.perfil.get('usuario_principal');
     if (p) {
-      await db.perfil.put({
+      const perfilActualizado: PerfilUsuario = {
         ...p,
         caloriasPersonalizadas: 2800,
         pesoReferenciaKg: p.pesoReferenciaKg && p.pesoReferenciaKg <= 110 ? p.pesoReferenciaKg : 95,
         usaProteinaEnPolvo: p.usaProteinaEnPolvo ?? true,
         scoopsProteinaDia: p.scoopsProteinaDia ?? 1,
-      });
+      };
+      await db.perfil.put(perfilActualizado);
+      localStorage.setItem('backup_perfil_usuario', JSON.stringify(perfilActualizado));
     }
   } catch (error) {
     console.error('Error al inicializar la base de datos IndexedDB:', error);

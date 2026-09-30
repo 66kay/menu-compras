@@ -404,9 +404,15 @@ export function parsearTextoNutricional(texto: string): MetricasTablaNutricional
       porcionTexto = l.trim();
     }
 
+    // Limpiar '100g', '100ml', 'por 100' para que el regex no confunda la columna de 100g con el valor del macro
+    const lSin100 = l
+      .replace(/\b100\s*(?:g|gr|ml)\b/gi, '')
+      .replace(/\bpor\s+100\b/gi, '')
+      .replace(/\b100\s*g\b/gi, '');
+
     // Calorías / Energía
     if (l.includes('energia') || l.includes('energía') || l.includes('calorias') || l.includes('calorías') || l.includes('kcal')) {
-      const match = l.match(/(\d+)\s*(?:kcal|cal)?/i);
+      const match = lSin100.match(/(\d+)\s*(?:kcal|cal)?/i) || l.match(/(\d+)\s*(?:kcal|cal)/i);
       if (match?.[1] && !caloriasPor100g) {
         caloriasPor100g = parseInt(match[1], 10);
       }
@@ -414,7 +420,7 @@ export function parsearTextoNutricional(texto: string): MetricasTablaNutricional
 
     // Proteínas
     if (l.includes('proteina') || l.includes('proteína') || l.includes('protein')) {
-      const match = l.match(regexNum);
+      const match = lSin100.match(regexNum);
       if (match?.[1] && proteinasGramos === undefined) {
         proteinasGramos = parseFloat(match[1].replace(',', '.'));
       }
@@ -422,7 +428,7 @@ export function parsearTextoNutricional(texto: string): MetricasTablaNutricional
 
     // Grasas totales
     if ((l.includes('grasa total') || l.includes('grasas totales') || l.includes('lipidos')) && !l.includes('saturada')) {
-      const match = l.match(regexNum);
+      const match = lSin100.match(regexNum);
       if (match?.[1] && grasasTotalesGramos === undefined) {
         grasasTotalesGramos = parseFloat(match[1].replace(',', '.'));
       }
@@ -430,7 +436,7 @@ export function parsearTextoNutricional(texto: string): MetricasTablaNutricional
 
     // Grasas saturadas
     if (l.includes('saturada')) {
-      const match = l.match(regexNum);
+      const match = lSin100.match(regexNum);
       if (match?.[1] && grasasSaturadasGramos === undefined) {
         grasasSaturadasGramos = parseFloat(match[1].replace(',', '.'));
       }
@@ -438,7 +444,7 @@ export function parsearTextoNutricional(texto: string): MetricasTablaNutricional
 
     // Carbohidratos
     if (l.includes('carbohidrato') || l.includes('h. de c') || l.includes('hidratos de carbono')) {
-      const match = l.match(regexNum);
+      const match = lSin100.match(regexNum);
       if (match?.[1] && carbohidratosGramos === undefined) {
         carbohidratosGramos = parseFloat(match[1].replace(',', '.'));
       }
@@ -446,7 +452,7 @@ export function parsearTextoNutricional(texto: string): MetricasTablaNutricional
 
     // Azúcares
     if (l.includes('azucar') || l.includes('azúcar')) {
-      const match = l.match(regexNum);
+      const match = lSin100.match(regexNum);
       if (match?.[1] && azucaresGramos === undefined) {
         azucaresGramos = parseFloat(match[1].replace(',', '.'));
       }
@@ -454,7 +460,7 @@ export function parsearTextoNutricional(texto: string): MetricasTablaNutricional
 
     // Sodio
     if (l.includes('sodio')) {
-      const match = l.match(/(\d+)\s*(?:mg)?/i);
+      const match = lSin100.match(/(\d+)\s*(?:mg)?/i);
       if (match?.[1] && sodioMg === undefined) {
         sodioMg = parseInt(match[1], 10);
       }

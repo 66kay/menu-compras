@@ -43,13 +43,14 @@ function normalizarNombreIngrediente(nombre: string): string {
   if (n.includes('papas') || n.includes('papa')) return 'Papas granel';
   if (n.includes('zapallo camote')) return 'Zapallo camote';
   if (n.includes('zapallito')) return 'Zapallito italiano';
-  if (n.includes('ensalada') || n.includes('mix') || n.includes('toscana') || n.includes('lechuga') || n.includes('espinaca')) return 'Ensalada Toscana fresca';
+  if (n.includes('ensalada') || n.includes('mix') || n.includes('toscana') || n.includes('lechuga') || n.includes('espinaca')) return 'Ensalada Mix Toscana Bolsa, 180 g';
   if (n.includes('champiñon') || n.includes('champinon')) return 'Champiñones laminados';
   if (n.includes('fideo') || n.includes('spaghetti') || n.includes('tallarin')) return 'Fideos spaghetti o tallarines';
   if (n.includes('tortilla')) return 'Tortillas de trigo integrales (rapiditas)';
   if (n.includes('tomate')) return 'Tomate chileno';
   if (n.includes('cebolla')) return 'Cebolla granel';
   if (n.includes('plátano') || n.includes('platano')) return 'Plátano maduro';
+  if (n.includes('mayo') || n.includes('mayonesa') || n.includes('kraft')) return 'Mayonesa Regular Frasco, 1.262 g';
   if (n.includes('aceite')) return 'Aceite de oliva o vegetal';
   if (n.includes('atún') || n.includes('atun')) return 'Lomitos de atún al agua';
   if (n.includes('proteína en polvo') || n.includes('whey')) return 'Suplemento de proteína Whey chocolate tarro';

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { PlanDia, ComidaPlanificada, Receta, PerfilUsuario, CategoriaComida } from '../../types';
 import { db } from '../../db';
+import { fechaALocalISO, sumarDiasISO } from '../../logic/fechas';
 
 interface HoyViewProps {
   planDia: PlanDia | null;
@@ -39,9 +40,7 @@ export const HoyView: React.FC<HoyViewProps> = ({
 
   // Navegación de fecha
   const ajustarDia = (delta: number) => {
-    const d = new Date(fechaSeleccionada + 'T00:00:00');
-    d.setDate(d.getDate() + delta);
-    onCambiarFecha(d.toISOString().split('T')[0] || '');
+    onCambiarFecha(sumarDiasISO(fechaSeleccionada, delta));
   };
 
   // Formato de fecha chilena
@@ -54,7 +53,7 @@ export const HoyView: React.FC<HoyViewProps> = ({
     });
   };
 
-  const hoyISO = new Date().toISOString().split('T')[0] || '';
+  const hoyISO = fechaALocalISO();
   const esHoy = fechaSeleccionada === hoyISO;
 
   // Cálculo de macros consumidos

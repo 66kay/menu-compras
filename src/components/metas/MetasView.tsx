@@ -18,6 +18,7 @@ import type {
 import { calcularMetasBase } from '../../logic/nutricion';
 import { calcularMediaMovil, analizarTendenciaYGenerarSugerencia } from '../../logic/progreso';
 import { db } from '../../db';
+import { fechaALocalISO } from '../../logic/fechas';
 
 interface MetasViewProps {
   perfil: PerfilUsuario;
@@ -52,9 +53,7 @@ export const MetasView: React.FC<MetasViewProps> = ({
 
   // Registro de nuevo pesaje
   const [modalNuevoPeso, setModalNuevoPeso] = useState<boolean>(false);
-  const [fechaNuevoPeso, setFechaNuevoPeso] = useState<string>(
-    () => new Date().toISOString().split('T')[0] || ''
-  );
+  const [fechaNuevoPeso, setFechaNuevoPeso] = useState<string>(() => fechaALocalISO());
   const [pesoInput, setPesoInput] = useState<string>(perfil.pesoActualKg.toString());
   const [cinturaInput, setCinturaInput] = useState<string>('');
   const [notasInput, setNotasInput] = useState<string>('');

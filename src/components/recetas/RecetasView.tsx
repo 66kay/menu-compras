@@ -17,8 +17,6 @@ interface RecetasViewProps {
   recetas: Receta[];
   perfil: PerfilUsuario;
   onActualizarRecetas: () => void;
-  recetaSeleccionada?: Receta | null;
-  onCerrarDetalleReceta?: () => void;
   onVerRecetaDetalle: (receta: Receta) => void;
 }
 
@@ -26,8 +24,6 @@ export const RecetasView: React.FC<RecetasViewProps> = ({
   recetas,
   perfil,
   onActualizarRecetas,
-  recetaSeleccionada,
-  onCerrarDetalleReceta,
   onVerRecetaDetalle,
 }) => {
   const [busqueda, setBusqueda] = useState<string>('');
@@ -310,92 +306,6 @@ export const RecetasView: React.FC<RecetasViewProps> = ({
           </div>
         ))}
       </div>
-
-      {/* Modal Detalle de Receta */}
-      {recetaSeleccionada && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="relative w-full max-w-xl max-h-[85vh] bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 overflow-y-auto shadow-2xl space-y-5">
-            <div className="flex items-start justify-between gap-3 pb-3 border-b border-[var(--border-subtle)]">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block mb-1">
-                  {recetaSeleccionada.categoria} • {recetaSeleccionada.tiempoMinutos} minutos
-                </span>
-                <h3 className="text-lg font-bold text-[var(--text-primary)] leading-tight">
-                  {recetaSeleccionada.nombre}
-                </h3>
-              </div>
-              <button
-                onClick={onCerrarDetalleReceta}
-                className="w-8 h-8 rounded-lg bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center justify-center cursor-pointer shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Macros destacados */}
-            <div className="grid grid-cols-4 gap-2 text-center text-xs tabular-nums p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
-              <div>
-                <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Calorías</span>
-                <span className="font-bold text-[var(--text-primary)] text-sm">
-                  {recetaSeleccionada.macrosPorPorcion.calorias}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Proteína</span>
-                <span className="font-bold text-[var(--accent-protein)] text-sm">
-                  {recetaSeleccionada.macrosPorPorcion.proteinas}g
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Carbos</span>
-                <span className="font-bold text-[var(--text-primary)] text-sm">
-                  {recetaSeleccionada.macrosPorPorcion.carbohidratos}g
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase block">Grasas</span>
-                <span className="font-bold text-[var(--text-primary)] text-sm">
-                  {recetaSeleccionada.macrosPorPorcion.grasas}g
-                </span>
-              </div>
-            </div>
-
-            {/* Ingredientes Normalizados */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
-                Ingredientes ({recetaSeleccionada.porciones} porción)
-              </h4>
-              <ul className="space-y-1.5 text-xs text-[var(--text-primary)]">
-                {recetaSeleccionada.ingredientes.map((ing, i) => (
-                  <li
-                    key={i}
-                    className="p-2 rounded-lg bg-[var(--bg-elevated)]/50 flex items-center justify-between gap-2"
-                  >
-                    <span>{ing.nombre}</span>
-                    <span className="font-semibold tabular-nums text-[var(--accent-protein)] shrink-0">
-                      {ing.cantidad} {ing.unidad}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Instrucciones Paso a Paso */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
-                Preparación Paso a Paso
-              </h4>
-              <ol className="space-y-2 text-xs text-[var(--text-secondary)] list-decimal list-inside leading-relaxed">
-                {recetaSeleccionada.instrucciones.map((inst, i) => (
-                  <li key={i} className="pl-1">
-                    <span className="text-[var(--text-primary)]">{inst}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal Nueva Receta Personalizada */}
       {modalNuevaReceta && (

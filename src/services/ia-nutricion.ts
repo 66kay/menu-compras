@@ -43,23 +43,103 @@ export const SUSTITUCIONES_LIDER: Record<
     sustitutos: [
       {
         nombre: 'Filete de pechuga de pavo (Sopraval / Líder)',
-        ventaja: 'Misma proteína magra (~24g/100g), cero grasa y se dora en sartén en 5 min.',
+        ventaja: 'Misma proteína magra (~24g/100g), cero grasa y se cocina en 5 min.',
         equivalencia: '120g de pavo por 120g de pollo.',
       },
       {
-        nombre: 'Pechuga de pollo entera con hueso',
-        ventaja: '30% a 40% más barata. Solo le retiras la piel y el hueso con cuchillo.',
-        equivalencia: '1 pechuga entera rinde aprox. 2 porciones de filete.',
+        nombre: 'Pechuga entera con hueso',
+        ventaja: '35% más barata en Líder. Retiras piel y hueso en 1 minuto.',
+        equivalencia: '1 pechuga entera rinde 2 porciones.',
+      },
+      {
+        nombre: 'Lomo centro de cerdo magro en bistec',
+        ventaja: 'Ultra magro (solo 2.5g grasa), muy barato y rico en sartén.',
+        equivalencia: '1 bistec de 120g.',
       },
       {
         nombre: 'Trutro entero deshuesado sin piel',
-        ventaja: 'Más jugoso, precio similar o menor en Líder.',
-        equivalencia: '120g en sartén.',
+        ventaja: 'Jugoso y económico en Líder.',
+        equivalencia: '120g.',
+      },
+    ],
+  },
+  jamon: {
+    ingredientePrincipal: 'Jamón Pierna Tradicional (La Preferida)',
+    sustitutos: [
+      {
+        nombre: 'Pechuga de pavo cocida en lonjas (Líder / Sopraval)',
+        ventaja: 'Magro, 18g de proteína y listo para consumir en frío o caliente.',
+        equivalencia: '2 láminas (25g a 30g).',
       },
       {
-        nombre: 'Lomo centro de cerdo magro',
-        ventaja: 'Ultra magro (menos grasa que el trutro), baratísimo y listo en 5 minutos.',
-        equivalencia: '1 bistec de 120g.',
+        nombre: 'Lomo centro de cerdo cocido o dorado',
+        ventaja: 'Músculo 100% puro sin almidón ni sodio agregado.',
+        equivalencia: '1 filete delgado de 30g.',
+      },
+      {
+        nombre: 'Huevos duros en rodajas',
+        ventaja: 'Aporte proteico similar y más económico.',
+        equivalencia: '1 huevo duro por 2 láminas de jamón.',
+      },
+    ],
+  },
+  huevos: {
+    ingredientePrincipal: 'Huevos de gallina (Cintazul / Líder)',
+    sustitutos: [
+      {
+        nombre: 'Claras líquidas pasteurizadas (Botella 1L Líder)',
+        ventaja: '100% albúmina pura sin colesterol ni grasa. Lista en 2 min en microondas.',
+        equivalencia: '60 ml de clara = 2 claras de huevo.',
+      },
+      {
+        nombre: 'Quesillo de vaca sureño',
+        ventaja: 'Caseína pura, fresca y suave en pan tostado.',
+        equivalencia: '50g de quesillo = 2 huevos.',
+      },
+      {
+        nombre: 'Lomitos de atún al agua',
+        ventaja: 'Proteína completa sin preparación.',
+        equivalencia: '1/2 lata de atún al agua = 2 huevos.',
+      },
+    ],
+  },
+  leche_protein: {
+    ingredientePrincipal: 'Leche Descremada Protein+ (Colun 13g)',
+    sustitutos: [
+      {
+        nombre: 'Leche Protein+ Soprole 1L',
+        ventaja: 'Idéntico perfil: 10g a 13g de proteína por vaso y 0 sellos.',
+        equivalencia: '1 vaso (200 ml).',
+      },
+      {
+        nombre: 'Leche descremada natural + 1/2 scoop Whey',
+        ventaja: 'Leche normal de $1.290 mezclada con tu proteína en polvo.',
+        equivalencia: '200 ml de leche + 15g whey = 19g prote.',
+      },
+      {
+        nombre: 'Yogurt Protein natural (15g prote)',
+        ventaja: 'Cremoso, digestivo y sin azúcar.',
+        equivalencia: '1 pote individual (155g).',
+      },
+    ],
+  },
+  granola: {
+    ingredientePrincipal: 'Granola Miel y Almendras (Quaker)',
+    sustitutos: [
+      {
+        nombre: 'Avena instantánea tradicional en hojuelas',
+        ventaja: 'Carbohidrato complejo más saciante y económico. Agrégale toque de canela.',
+        equivalencia: '30g de avena = 25g granola.',
+      },
+      {
+        nombre: 'Galletas de agua integrales',
+        ventaja: 'Crocantes, económicas y sin sellos.',
+        equivalencia: '4 galletas = 1 porción de granola.',
+      },
+      {
+        nombre: 'Pan de molde integral tostado en cubitos',
+        ventaja: 'Tostado crujiente para mezclar con leche tibia o yogurt.',
+        equivalencia: '1 rebanada tostada picada.',
       },
     ],
   },
@@ -68,17 +148,17 @@ export const SUSTITUCIONES_LIDER: Record<
     sustitutos: [
       {
         nombre: 'Posta rosada o asiento de vacuno',
-        ventaja: 'Cortes magros equivalentes en proteína (~22g/100g), muy blandos en sartén.',
-        equivalencia: '1 bistec de 110-120g.',
+        ventaja: 'Cortes magros equivalentes en proteína (~22g/100g), muy tiernos.',
+        equivalencia: '1 bistec de 110g-120g.',
       },
       {
-        nombre: 'Carne molida tártaro 4% o vacuno 7% grasa',
-        ventaja: 'Excelente ratio proteico, dorada en 4 minutos sin aceite adicional.',
+        nombre: 'Carne molida tártaro 4% grasa Líder',
+        ventaja: 'Se dora en sartén en 3 minutos sin aceite adicional.',
         equivalencia: '110g de carne molida.',
       },
       {
-        nombre: 'Pollo ganso o posta paleta',
-        ventaja: 'Económico si está en oferta, apto para bistec fino.',
+        nombre: 'Pollo ganso o posta paleta fileteada fina',
+        ventaja: 'Económico y magro.',
         equivalencia: '120g.',
       },
     ],
@@ -88,18 +168,38 @@ export const SUSTITUCIONES_LIDER: Record<
     sustitutos: [
       {
         nombre: 'Jurel al agua natural (San José / Único)',
-        ventaja: 'Súper económico, alto en Omega-3 y con 22g de proteína por porción.',
-        equivalencia: '1 taza de jurel desmenuzado sin espinas.',
+        ventaja: 'Baratísimo, alto en Omega-3 y con 22g de proteína por lata.',
+        equivalencia: '1 taza de jurel limpio sin espinas.',
       },
       {
         nombre: 'Filete de merluza austral fresca o congelada',
-        ventaja: 'Pescado blanco ultra magro, listo en 6 minutos al sartén con limón.',
-        equivalencia: '1 filete de 130g.',
+        ventaja: 'Pescado blanco ultra magro, listo en 5 min a la plancha.',
+        equivalencia: '1 filete de 120g.',
       },
       {
-        nombre: 'Huevos enteros + claras',
-        ventaja: 'Siempre disponible y el costo por gramo de proteína más bajo.',
-        equivalencia: '2 huevos enteros + 2 claras equivalen a 1 lata de atún.',
+        nombre: 'Huevos revueltos (2 huevos enteros)',
+        ventaja: 'Aporte proteico equivalente.',
+        equivalencia: '2 huevos enteros.',
+      },
+    ],
+  },
+  merluza: {
+    ingredientePrincipal: 'Filete de merluza austral con piel',
+    sustitutos: [
+      {
+        nombre: 'Filetes de reineta congelada Líder',
+        ventaja: 'Pescado blanco firme y muy magro, se sella con limón y sal en 5 min.',
+        equivalencia: '1 filete de 120g.',
+      },
+      {
+        nombre: 'Lomitos de atún al agua',
+        ventaja: 'Cero cocción y precio controlado.',
+        equivalencia: '1 lata drenada.',
+      },
+      {
+        nombre: 'Pechuga de pollo en tiras',
+        ventaja: 'Misma proteína magra de absorción limpia.',
+        equivalencia: '120g de pollo.',
       },
     ],
   },
@@ -113,13 +213,13 @@ export const SUSTITUCIONES_LIDER: Record<
       },
       {
         nombre: 'Queso ricotta magro (Light)',
-        ventaja: 'Textura cremosa para untar en pan con orégano o fruta.',
+        ventaja: 'Cremoso para untar con orégano en marraqueta.',
         equivalencia: '70g a 90g.',
       },
       {
         nombre: 'Huevos revueltos o duros',
         ventaja: 'Proteína pura sin lactosa.',
-        equivalencia: '2 huevos duros en rebanadas con tomate.',
+        equivalencia: '1 a 2 huevos.',
       },
     ],
   },
@@ -127,39 +227,104 @@ export const SUSTITUCIONES_LIDER: Record<
     ingredientePrincipal: 'Proteína en polvo (Whey Protein)',
     sustitutos: [
       {
-        nombre: 'Leche con proteína (Protein+ Colun o Soprole)',
-        ventaja: 'Aporta 30g de proteína pura por envase, lista para tomar fría sin shaker.',
-        equivalencia: '1 caja de 330ml o 1 vaso grande de 350ml de leche protein.',
+        nombre: 'Leche con proteína (Protein+ Colun 13g)',
+        ventaja: 'Aporta 13g por vaso (30g por 500ml), lista para tomar.',
+        equivalencia: '1 vaso grande (300 ml).',
       },
       {
-        nombre: 'Yogurt Protein (Soprole o Loncoleche)',
-        ventaja: 'Aporta entre 12g y 15g de proteína por pote, ideal con 1 plátano.',
+        nombre: 'Yogurt Protein natural',
+        ventaja: '12g a 15g de proteína por pote.',
         equivalencia: '1 a 2 potes de yogurt protein.',
       },
       {
-        nombre: 'Claras de huevo pasteurizadas líquidas en botella',
-        ventaja: 'Se venden en Líder en botella de 1 litro. Se cocinan 2 minutos en microondas.',
-        equivalencia: '150 ml de claras líquidas aportan ~17g de proteína pura.',
+        nombre: 'Claras líquidas pasteurizadas',
+        ventaja: '150 ml aportan ~17g de proteína pura.',
+        equivalencia: '150 ml cocinados 2 min al microondas.',
       },
     ],
   },
   pan: {
-    ingredientePrincipal: 'Pan de molde integral 100% o Marraqueta',
+    ingredientePrincipal: 'Pan de molde integral o Marraqueta fresca',
     sustitutos: [
       {
+        nombre: 'Tortillas de trigo integrales (Rapiditas)',
+        ventaja: 'Se calientan 20 segundos y no se echan a perder.',
+        equivalencia: '1 a 2 tortillas integrales.',
+      },
+      {
         nombre: 'Pan pita integral 100%',
-        ventaja: 'Bajo en sodio, crujiente en tostador en 2 minutos.',
+        ventaja: 'Bajo en sodio y crujiente al tostador.',
         equivalencia: '1 pan pita mediano.',
       },
       {
-        nombre: 'Tortillas de trigo integrales (Rapiditas Protein o Integrales)',
-        ventaja: 'Duran semanas en despensa, listas en 20 segundos.',
-        equivalencia: '1 a 2 tortillas.',
+        nombre: 'Avena en hojuelas con agua o leche',
+        ventaja: 'Carbohidrato complejo con más fibra.',
+        equivalencia: '40g de avena en copos.',
+      },
+    ],
+  },
+  ensalada: {
+    ingredientePrincipal: 'Ensalada Toscana fresca (Fresh Cut 300g)',
+    sustitutos: [
+      {
+        nombre: 'Mix de lechugas hidropónicas lavadas',
+        ventaja: 'Cero preparación, abrir bolsa y aliñar con limón y sal.',
+        equivalencia: '1 plato hondo (~80g).',
       },
       {
-        nombre: 'Avena instantánea tradicional en tazón',
-        ventaja: 'Carbohidrato complejo de absorción lenta con más fibra.',
-        equivalencia: '40g a 50g de avena en copos.',
+        nombre: 'Espinaca baby lavada en bolsa',
+        ventaja: 'Alta en hierro y magnesio, crujiente en crudo.',
+        equivalencia: '80g de espinaca.',
+      },
+      {
+        nombre: 'Lechuga escarola o repollada granel',
+        ventaja: 'La opción más económica por kilo en Líder.',
+        equivalencia: '4 hojas grandes lavadas.',
+      },
+    ],
+  },
+  palta: {
+    ingredientePrincipal: 'Palta Hass malla o granel',
+    sustitutos: [
+      {
+        nombre: 'Aceite de oliva extra virgen en crudo',
+        ventaja: 'Mismas grasas monoinsaturadas cardiosaludables.',
+        equivalencia: '1 cucharadita (5 ml) = ~25g de palta.',
+      },
+      {
+        nombre: 'Quesillo de vaca sureño molido',
+        ventaja: 'Da textura cremosa en tostadas sumando proteína.',
+        equivalencia: '30g de quesillo.',
+      },
+    ],
+  },
+  frutas: {
+    ingredientePrincipal: 'Plátano maduro o Arándanos frescos',
+    sustitutos: [
+      {
+        nombre: 'Manzana verde Granny Smith',
+        ventaja: 'Baja en azúcar, ultra crujiente y dura semanas fresca.',
+        equivalencia: '1 manzana mediana por 1 plátano.',
+      },
+      {
+        nombre: 'Arándanos congelados bolsa 500g',
+        ventaja: 'Rinden el doble que el pote fresco y no se dañan.',
+        equivalencia: '1 puñado (40g).',
+      },
+    ],
+  },
+  pastas_arroz: {
+    ingredientePrincipal: 'Arroz grado 1 o Fideos Spaghetti',
+    sustitutos: [
+      {
+        nombre: 'Papas granel cocidas (al vapor o microondas)',
+        ventaja: 'El carbohidrato más saciante del mundo según el índice de saciedad.',
+        equivalencia: '1 papa mediana (150g) = 50g arroz crudo.',
+      },
+      {
+        nombre: 'Zapallo camote asado o hervido',
+        ventaja: 'Bajísimo en calorías, permite comer porciones enormes.',
+        equivalencia: '200g de zapallo camote.',
       },
     ],
   },
@@ -409,24 +574,48 @@ export function responderDudaSupermercado(pregunta: string): string {
   const p = pregunta.toLowerCase();
 
   if (p.includes('pollo') || p.includes('pechuga')) {
-    return '🍗 Si no hay Pechuga Deshuesada en Líder:\n1) Lleva Pechuga Entera con hueso (es mucho más barata y le sacas la piel en 1 min);\n2) Filete de Pavo Sopraval corte fino;\n3) Trutro entero deshuesado sin piel;\n4) Lomo centro de cerdo magro en bistec.';
+    return '🍗 Si no hay Pechuga Deshuesada en Líder:\n• 1° Pechuga Entera con hueso (35% más barata, retiras hueso en 1 min)\n• 2° Filete de Pavo Sopraval corte fino\n• 3° Trutro entero deshuesado sin piel\n• 4° Lomo centro de cerdo magro en bistec.';
   }
 
   if (p.includes('carne') || p.includes('vacuno') || p.includes('posta')) {
-    return '🥩 Si no hay Posta Negra tártaro:\n1) Tártaro 4% grasa en bandeja envasada;\n2) Posta Rosada (corte magro muy tierno para sartén);\n3) Asiento de vacuno;\n4) Pollo Ganso fileteado delgado.\n⚠️ Evita carnes con más de 10% de grasa como huachalomo o sobrecostilla.';
+    return '🥩 Si no hay Posta Negra:\n• 1° Carne molida tártaro 4% grasa Líder\n• 2° Posta Rosada en bistec (magra y muy tierna)\n• 3° Asiento de vacuno o Pollo Ganso fileteado fino\n⚠️ Evita huachalomo o sobrecostilla (>10% grasa).';
+  }
+
+  if (p.includes('jamon') || p.includes('jamón')) {
+    return '🥓 Si no hay Jamón Pierna La Preferida:\n• 1° Pechuga de pavo cocida en lonjas (Líder / Sopraval)\n• 2° Lomo centro de cerdo dorado en láminas finas\n• 3° Huevo duro en rodajas con orégano.';
+  }
+
+  if (p.includes('leche') || p.includes('protein+')) {
+    return '🥛 Si no hay Leche Protein+ Colun 13g:\n• 1° Leche Protein+ Soprole 1L\n• 2° Leche descremada común de $1.290 + 1/2 scoop de tu proteína Whey\n• 3° Yogurt Protein natural (15g proteína por pote).';
+  }
+
+  if (p.includes('granola')) {
+    return '🥣 Si no hay Granola Quaker Miel Almendras:\n• 1° Avena instantánea en hojuelas con canela y endulzante\n• 2° Galletas de agua integrales Line\n• 3° Pan de molde integral tostado en cubitos crocantes.';
+  }
+
+  if (p.includes('merluza') || p.includes('pescado')) {
+    return '🐟 Si no hay Merluza Austral en Líder:\n• 1° Filetes de Reineta congelada en porciones\n• 2° Lomitos de atún al agua en lata\n• 3° Pechuga de pollo en tiras sellada con limón.';
+  }
+
+  if (p.includes('ensalada') || p.includes('lechuga') || p.includes('espinaca')) {
+    return '🥗 Si no hay Ensalada Toscana Fresh Cut:\n• 1° Mix de lechugas hidropónicas lavadas en bolsa\n• 2° Espinaca baby en bolsa (lista para consumir)\n• 3° Lechuga escarola o repollada a granel.';
   }
 
   if (p.includes('atun') || p.includes('atún')) {
-    return '🐟 En atún: compra SIEMPRE "Lomitos de Atún al Agua" (San José, Líder o Robinson Crusoe).\n❌ Evita el atún en aceite (triplica las calorías) y el atún desmenuzado (contiene más agua y rinde menos proteína neta).';
+    return '🐟 En atún Líder:\n• SIEMPRE: "Lomitos de Atún al Agua" (San José, Líder o Robinson Crusoe)\n❌ Evita atún en aceite (triplica calorías) y atún desmenuzado (rinde menos proteína neta).';
   }
 
   if (p.includes('quesillo') || p.includes('queso')) {
-    return '🧀 Si no hay Quesillo Colun:\n1) Queso fresco light (menos de 8g de grasa);\n2) Ricotta descremada Colun o Quillayes;\n3) Claras de huevo en sartén o huevos duros como reemplazo directo.';
+    return '🧀 Si no hay Quesillo Colun:\n• 1° Queso fresco tradicional o light\n• 2° Queso ricotta descremada para untar\n• 3° Huevos revueltos o duros.';
+  }
+
+  if (p.includes('huevo') || p.includes('huevos')) {
+    return '🥚 Si no hay bandejas de 30 huevos:\n• 1° Claras líquidas pasteurizadas en botella 1L Líder (microondas 2 min)\n• 2° Quesillo sureño (50g = 2 huevos)\n• 3° Lomitos de atún al agua.';
   }
 
   if (p.includes('proteina') || p.includes('whey') || p.includes('polvo')) {
-    return '💪 Si se te acaba la proteína en polvo o no tienes shaker a mano:\n1) Leche con Proteína (Protein+ Colun o Soprole) aporta 30g de proteína de absorción rápida;\n2) Botella de claras pasteurizadas (150 ml = ~18g prote);\n3) Dos latas de atún al agua.';
+    return '💪 Si se te acaba la proteína en polvo:\n• 1° Leche Protein+ Colun o Soprole (30g prote por 500ml)\n• 2° Botella de claras pasteurizadas líquidas (150 ml = ~18g prote)\n• 3° 1 lata de lomitos de atún al agua.';
   }
 
-  return '💡 Para darte un veredicto exacto de ese producto, sube o toma una foto de la Tabla Nutricional y la leeré al instante para decirte si tiene Visto Bueno o si te conviene buscar otra alternativa.';
+  return '💡 Sube o toma una foto de la tabla nutricional con el botón de cámara/galería aquí abajo y te daré un veredicto instantáneo de 3 líneas sobre si te sirve o te conviene otra opción.';
 }

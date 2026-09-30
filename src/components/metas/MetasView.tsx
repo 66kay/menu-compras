@@ -36,7 +36,14 @@ export const MetasView: React.FC<MetasViewProps> = ({
   const [edad, setEdad] = useState<number>(perfil.edad);
   const [alturaCm, setAlturaCm] = useState<number>(perfil.alturaCm);
   const [pesoActualKg, setPesoActualKg] = useState<number>(perfil.pesoActualKg);
-  const [pesoReferenciaKg, setPesoReferenciaKg] = useState<number>(perfil.pesoReferenciaKg ?? 95);
+  const [pesoReferenciaKg, setPesoReferenciaKg] = useState<number>(
+    perfil.pesoReferenciaKg && perfil.pesoReferenciaKg <= 110 ? perfil.pesoReferenciaKg : 95
+  );
+  const [caloriasPersonalizadas, setCaloriasPersonalizadas] = useState<number>(
+    perfil.caloriasPersonalizadas && perfil.caloriasPersonalizadas >= 2000
+      ? perfil.caloriasPersonalizadas
+      : 2800
+  );
   const [diasGym, setDiasGym] = useState<number>(perfil.diasGymSemana);
   const [objetivo, setObjetivo] = useState<ObjetivoNutricional>(perfil.objetivo);
   const [gramosProteina, setGramosProteina] = useState<number>(perfil.gramosProteinaPorKg);
@@ -68,6 +75,7 @@ export const MetasView: React.FC<MetasViewProps> = ({
     factorActividad,
     objetivo,
     gramosProteinaPorKg: gramosProteina,
+    caloriasPersonalizadas,
     usaProteinaEnPolvo,
     scoopsProteinaDia: usaProteinaEnPolvo ? 1 : 0,
   };
@@ -250,20 +258,56 @@ export const MetasView: React.FC<MetasViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div>
-              <label className="block font-semibold text-[var(--text-secondary)] mb-1">
-                Objetivo Nutricional
-              </label>
-              <select
-                value={objetivo}
-                onChange={(e) => setObjetivo(e.target.value as ObjetivoNutricional)}
-                className="w-full px-3 py-2 text-base rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-primary)] font-medium"
-              >
-                <option value="recomposicion">Recomposición (-250 kcal + alta proteína)</option>
-                <option value="bajar_grasa">Bajar grasa (-400 kcal)</option>
-                <option value="subir_musculo">Subir músculo (+250 kcal)</option>
-                <option value="mantener">Mantenimiento (0 kcal)</option>
-              </select>
+            <div className="space-y-3">
+              <div>
+                <label className="block font-semibold text-[var(--text-secondary)] mb-1">
+                  Objetivo Nutricional
+                </label>
+                <select
+                  value={objetivo}
+                  onChange={(e) => setObjetivo(e.target.value as ObjetivoNutricional)}
+                  className="w-full px-3 py-2 text-base rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-primary)] font-medium"
+                >
+                  <option value="recomposicion">Recomposición (-250 kcal + alta proteína)</option>
+                  <option value="bajar_grasa">Bajar grasa (-400 kcal)</option>
+                  <option value="subir_musculo">Subir músculo (+250 kcal)</option>
+                  <option value="mantener">Mantenimiento (0 kcal)</option>
+                </select>
+              </div>
+
+              {/* Meta Calórica Personalizada (2.800 kcal fijas para recomposición) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-[var(--text-secondary)]">
+                    Meta Calórica Diaria
+                  </label>
+                  <span className="text-[11px] font-bold text-[var(--accent-carb)] tabular-nums">
+                    {caloriasPersonalizadas} kcal/día
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="50"
+                    min="2000"
+                    max="4000"
+                    value={caloriasPersonalizadas}
+                    onChange={(e) => setCaloriasPersonalizadas(Number(e.target.value))}
+                    className="w-full px-3 py-2 text-base rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-primary)] font-bold tabular-nums"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCaloriasPersonalizadas(2800)}
+                    className="px-3 py-2 rounded-xl bg-[var(--accent-protein)]/15 border border-[var(--accent-protein)]/30 text-xs font-bold text-[var(--accent-protein)] hover:bg-[var(--accent-protein)]/25 transition-colors whitespace-nowrap cursor-pointer"
+                    title="Fijar en 2.800 kcal (Recomendado para recomposición)"
+                  >
+                    2.800 kcal
+                  </button>
+                </div>
+                <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
+                  🎯 <strong>2.800 kcal/día fijas:</strong> Establece un déficit real y seguro respecto a tus 3.819 kcal de mantenimiento para quemar grasa de manera constante sin tocar 3.700 kcal.
+                </p>
+              </div>
             </div>
 
             <div>
@@ -296,7 +340,7 @@ export const MetasView: React.FC<MetasViewProps> = ({
                 />
               </div>
               <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
-                💡 Calculado sobre <strong>{pesoReferenciaKg} kg</strong> (peso atlético de referencia para 191 cm). Evita consumo desmedido de pollo/carne y mantiene la compra del mes bajo $100.000 CLP.
+                💡 Calculado sobre <strong>{pesoReferenciaKg} kg</strong> (peso atlético de referencia para 191 cm). Evita consumo desmedido de pollo/carne (+10 kg) y mantiene la canasta mensual en ~$130.000 CLP.
               </p>
 
               <label className="flex items-center gap-2 pt-2 text-xs text-[var(--text-secondary)] cursor-pointer">
@@ -311,16 +355,16 @@ export const MetasView: React.FC<MetasViewProps> = ({
             </div>
           </div>
 
-          {/* Tarjeta de Fórmulas y Piso de Seguridad */}
-          <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-2 text-xs">
+          {/* Tarjeta de Fórmulas y Explicación Transparente de Orientación */}
+          <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] space-y-3 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-muted)]">TMB Basal (Mifflin-St Jeor):</span>
+              <span className="text-[var(--text-muted)]">TMB Basal (Mifflin-St Jeor para tus 137 kg reales):</span>
               <span className="font-semibold text-[var(--text-primary)] tabular-nums">
                 {metas.tmb.toLocaleString('es-CL')} kcal
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-muted)]">Gasto Energético Total (Mantenimiento):</span>
+              <span className="text-[var(--text-muted)]">Gasto Energético de Mantenimiento (GET 4 días gym):</span>
               <span className="font-semibold text-[var(--text-primary)] tabular-nums">
                 {metas.get.toLocaleString('es-CL')} kcal
               </span>
@@ -328,10 +372,13 @@ export const MetasView: React.FC<MetasViewProps> = ({
             <div className="flex items-center justify-between pt-2 border-t border-[var(--border-subtle)]">
               <div>
                 <span className="font-bold text-[var(--accent-carb)] uppercase tracking-wide block text-[11px]">
-                  Meta Calórica Diaria Promedio
+                  Meta Calórica Diaria Programada
                 </span>
                 <span className="text-xl font-bold text-[var(--text-primary)] tabular-nums">
                   {metas.caloriasObjetivo.toLocaleString('es-CL')} kcal
+                </span>
+                <span className="block text-[10px] text-emerald-400 font-semibold">
+                  (Déficit de ~1.000 kcal para quemar grasa con energía)
                 </span>
               </div>
               <div className="text-right">
@@ -350,13 +397,31 @@ export const MetasView: React.FC<MetasViewProps> = ({
             </div>
 
             {/* Presupuesto y Pollo Optimizado */}
-            <div className="mt-2 p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--accent-protein)]/25 flex items-center justify-between text-[11px]">
+            <div className="p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--accent-protein)]/25 flex items-center justify-between text-[11px]">
               <span className="text-[var(--text-secondary)]">
-                🍗 Pollo mensual estimado: <strong>~3.8 kg</strong> (en vez de 10 kg)
+                🍗 Pollo mensual estimado: <strong>~2.1 kg</strong> (variedad balanceada con pavo, posta y atún)
               </span>
               <span className="font-bold text-[var(--accent-protein)]">
-                🛒 Presupuesto Líder: &lt; $100.000 CLP / mes
+                🛒 Presupuesto Líder: ~$130.000 CLP / mes
               </span>
+            </div>
+
+            {/* Explicación de Personalización para 137 kg vs 95 kg */}
+            <div className="p-3 rounded-lg bg-[var(--bg-surface)]/80 border border-[var(--border-subtle)] space-y-1.5 text-[11px] leading-relaxed">
+              <span className="font-bold text-[var(--text-primary)] flex items-center gap-1 text-[var(--accent-protein)]">
+                💡 ¿Cómo está adaptada esta fórmula especialmente a tu cuerpo?
+              </span>
+              <ul className="space-y-1 text-[var(--text-secondary)] list-disc list-inside">
+                <li>
+                  <strong>Tus 137 kg reales:</strong> Se usan para tu gasto calórico real (tu cuerpo gasta 3.819 kcal diarias para mantenerse).
+                </li>
+                <li>
+                  <strong>Tus 2.800 kcal objetivo (no 3.700):</strong> Comer 3.700 kcal casi no dejaría déficit. 2.800 kcal es el número dorado: déficit saludable de 1.000 kcal para perder grasa semana a semana sin fatiga.
+                </li>
+                <li>
+                  <strong>Proteína calculada sobre 95 kg:</strong> La masa muscular se alimenta sobre el peso magro de referencia para 191 cm (95 kg). Así consumes 152g de proteína diaria (127g de alimentos + 25g de whey), protegiendo tus músculos sin obligarte a comer 11 kg de carne ni gastar más de $200.000 CLP.
+                </li>
+              </ul>
             </div>
 
             {metas.esPisoSeguridadAplicado && (

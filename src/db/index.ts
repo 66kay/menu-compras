@@ -42,7 +42,7 @@ export const db = new MenuComprasDB();
  */
 export async function inicializarBaseDatos(): Promise<void> {
   try {
-    const RECETAS_VERSION = 'v8-modal-ingredientes-2800kcal';
+    const RECETAS_VERSION = 'v9-direct-click-modal-complete-substitutes';
     const versionGuardada = localStorage.getItem('menu_recetas_version');
     const conteoRecetas = await db.recetas.count();
 
@@ -69,13 +69,13 @@ export async function inicializarBaseDatos(): Promise<void> {
       localStorage.setItem('menu_recetas_version', RECETAS_VERSION);
     }
 
-    // Migrar perfil existente asegurando las 2800 kcal exactas y peso atlético de referencia
+    // Migrar perfil existente asegurando las 2800 kcal exactas y peso atlético de referencia (95 kg)
     const p = await db.perfil.get('usuario_principal');
     if (p) {
       await db.perfil.put({
         ...p,
         caloriasPersonalizadas: 2800,
-        pesoReferenciaKg: p.pesoReferenciaKg ?? 95,
+        pesoReferenciaKg: p.pesoReferenciaKg && p.pesoReferenciaKg <= 110 ? p.pesoReferenciaKg : 95,
         usaProteinaEnPolvo: p.usaProteinaEnPolvo ?? true,
         scoopsProteinaDia: p.scoopsProteinaDia ?? 1,
       });

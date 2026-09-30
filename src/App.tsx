@@ -277,8 +277,6 @@ export const App: React.FC = () => {
               recetas={recetas}
               perfil={perfil}
               onActualizarRecetas={handleActualizarRecetas}
-              recetaSeleccionada={recetaDetalle}
-              onCerrarDetalleReceta={() => setRecetaDetalle(null)}
               onVerRecetaDetalle={(r) => setRecetaDetalle(r)}
             />
           )}

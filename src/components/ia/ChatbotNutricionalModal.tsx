@@ -69,9 +69,12 @@ export const ChatbotNutricionalModal: React.FC<ChatbotNutricionalModalProps> = (
     },
   ]);
   const [inputChat, setInputChat] = useState<string>('');
+  const [procesandoFotoChat, setProcesandoFotoChat] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const chatCameraInputRef = useRef<HTMLInputElement>(null);
+  const chatGalleryInputRef = useRef<HTMLInputElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   if (!abierto) return null;
@@ -171,6 +174,97 @@ export const ChatbotNutricionalModal: React.FC<ChatbotNutricionalModalProps> = (
     setMensajes((prev) => [...prev, nuevoUsuario, nuevaIA]);
     if (!textoPersonalizado) setInputChat('');
     setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+  };
+
+  // Procesar imagen subida directamente desde el chat
+  const handleChatImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const objectUrl = URL.createObjectURL(file);
+    const mensajeUsuarioId = `u-${Date.now()}`;
+    const mensajeIaId = `ia-${Date.now()}`;
+
+    // 1. Mostrar mensaje del usuario con la foto y mensaje de espera de la IA
+    setMensajes((prev) => [
+      ...prev,
+      {
+        id: mensajeUsuarioId,
+        remitente: 'usuario',
+        texto: '📸 Analiza esta tabla nutricional y dame un resumen rápido.',
+        imagenUrl: objectUrl,
+        fecha: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+      {
+        id: mensajeIaId,
+        remitente: 'ia',
+        texto: '🤖 Leyendo tabla nutricional con OCR e identificando macros...',
+        fecha: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
+
+    setProcesandoFotoChat(true);
+    setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+
+    try {
+      const metricas = await escanearTablaNutricionalOCR(file);
+      const veredicto = evaluarProductoNutricional(metricas, ingredienteInicial || 'general');
+
+      const cals = metricas.caloriasPor100g !== undefined ? `${metricas.caloriasPor100g} kcal` : 'N/D';
+      const prot = metricas.proteinasGramos !== undefined ? `${metricas.proteinasGramos}g` : '0g';
+      const carbs = metricas.carbohidratosGramos !== undefined ? `${metricas.carbohidratosGramos}g` : '0g';
+      const grasas = metricas.grasasTotalesGramos !== undefined ? `${metricas.grasasTotalesGramos}g` : '0g';
+
+      const iconoVeredicto =
+        veredicto.tipo === 'visto_bueno'
+          ? '✅ APROBADO'
+          : veredicto.tipo === 'aceptable'
+          ? '⚠️ ACEPTABLE'
+          : '❌ NO RECOMENDADO';
+
+      const resumenConciso = `🔍 RESUMEN RÁPIDO NUTRICIONAL:
+• Veredicto: ${iconoVeredicto} (${veredicto.calificacion}/10)
+• Macros por 100g: ${cals} | ${prot} Prot | ${carbs} Carb | ${grasas} Grasa
+• Visto Bueno: ${
+        veredicto.tipo === 'visto_bueno'
+          ? 'Excelente opción para tu recomposición corporal.'
+          : veredicto.tipo === 'aceptable'
+          ? 'Salva el apuro si no hay otra opción. Modera la porción.'
+          : 'No recomendado para tu meta (bajo en proteína o alto en grasa/azúcar).'
+      }
+• Porción sugerida: ${veredicto.porcionRecomendada}`;
+
+      // Actualizar mensaje de la IA con la respuesta definitiva concisa
+      setMensajes((prev) =>
+        prev.map((m) =>
+          m.id === mensajeIaId
+            ? {
+                ...m,
+                texto: resumenConciso,
+                veredicto,
+              }
+            : m
+        )
+      );
+    } catch (err) {
+      console.error('Error al procesar foto en chat:', err);
+      setMensajes((prev) =>
+        prev.map((m) =>
+          m.id === mensajeIaId
+            ? {
+                ...m,
+                texto:
+                  '⚠️ No se pudo leer con total nitidez la tabla. Asegúrate de enfocar bien la columna "Por 100g" con buena luz, o usa la pestaña "Escáner de Tabla".',
+              }
+            : m
+        )
+      );
+    } finally {
+      setProcesandoFotoChat(false);
+      if (chatCameraInputRef.current) chatCameraInputRef.current.value = '';
+      if (chatGalleryInputRef.current) chatGalleryInputRef.current.value = '';
+      setTimeout(() => chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    }
   };
 
   return (
@@ -632,6 +726,24 @@ export const ChatbotNutricionalModal: React.FC<ChatbotNutricionalModalProps> = (
         {/* Input para el chat (visible cuando tabActiva === 'chat') */}
         {tabActiva === 'chat' && (
           <div className="p-3 border-t border-[var(--border-subtle)] bg-[var(--bg-elevated)] flex items-center gap-2">
+            {/* Input oculto para cámara directa */}
+            <input
+              type="file"
+              ref={chatCameraInputRef}
+              accept="image/*"
+              capture="environment"
+              onChange={handleChatImageUpload}
+              className="hidden"
+            />
+            {/* Input oculto para galería / archivos */}
+            <input
+              type="file"
+              ref={chatGalleryInputRef}
+              accept="image/*"
+              onChange={handleChatImageUpload}
+              className="hidden"
+            />
+
             <input
               type="text"
               value={inputChat}
@@ -639,12 +751,43 @@ export const ChatbotNutricionalModal: React.FC<ChatbotNutricionalModalProps> = (
               onKeyDown={(e) => e.key === 'Enter' && handleEnviarMensaje()}
               placeholder="Pregúntame sobre un producto o sustituto..."
               className="flex-1 px-3.5 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-protein)]"
+              disabled={procesandoFotoChat}
             />
+
+            {/* Botón Tomar Foto con Cámara */}
             <button
-              onClick={() => handleEnviarMensaje()}
-              className="w-10 h-10 rounded-xl bg-[var(--accent-protein)] text-black flex items-center justify-center cursor-pointer hover:opacity-90 active:scale-95 transition-all shadow-xs"
+              type="button"
+              onClick={() => chatCameraInputRef.current?.click()}
+              disabled={procesandoFotoChat}
+              title="Tomar foto con la cámara del celular"
+              className="w-10 h-10 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--accent-protein)] hover:text-white hover:bg-[var(--accent-protein)]/20 active:scale-95 flex items-center justify-center cursor-pointer transition-all shrink-0"
             >
-              <Send className="w-4 h-4" />
+              <Camera className="w-4 h-4" />
+            </button>
+
+            {/* Botón Subir Foto desde Galería */}
+            <button
+              type="button"
+              onClick={() => chatGalleryInputRef.current?.click()}
+              disabled={procesandoFotoChat}
+              title="Subir foto desde la galería o archivos"
+              className="w-10 h-10 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--accent-protein)] hover:text-white hover:bg-[var(--accent-protein)]/20 active:scale-95 flex items-center justify-center cursor-pointer transition-all shrink-0"
+            >
+              <Upload className="w-4 h-4" />
+            </button>
+
+            {/* Botón Enviar Mensaje */}
+            <button
+              type="button"
+              onClick={() => handleEnviarMensaje()}
+              disabled={procesandoFotoChat}
+              className="w-10 h-10 rounded-xl bg-[var(--accent-protein)] text-black flex items-center justify-center cursor-pointer hover:opacity-90 active:scale-95 transition-all shadow-xs shrink-0 font-bold"
+            >
+              {procesandoFotoChat ? (
+                <Loader2 className="w-4 h-4 animate-spin text-black" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
             </button>
           </div>
         )}

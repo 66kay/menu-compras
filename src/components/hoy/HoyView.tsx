@@ -317,7 +317,8 @@ export const HoyView: React.FC<HoyViewProps> = ({
           return (
             <div
               key={catId}
-              className={`p-4 rounded-2xl border transition-all duration-200 ${
+              onClick={() => recetaOriginal && onVerRecetaDetalle(recetaOriginal)}
+              className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer hover:border-[var(--accent-protein)]/60 hover:shadow-md active:scale-[0.995] ${
                 comida.consumida
                   ? 'bg-[var(--bg-elevated)]/60 border-[var(--border-subtle)] opacity-75'
                   : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-xs'
@@ -326,7 +327,10 @@ export const HoyView: React.FC<HoyViewProps> = ({
               <div className="flex items-start justify-between gap-3">
                 {/* Checkbox de Consumido */}
                 <button
-                  onClick={() => handleToggleConsumida(catId)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleConsumida(catId);
+                  }}
                   className="mt-0.5 text-[var(--accent-protein)] hover:scale-105 active:scale-90 transition-transform cursor-pointer shrink-0"
                   aria-label={comida.consumida ? 'Marcar como pendiente' : 'Marcar como consumida'}
                 >
@@ -363,10 +367,7 @@ export const HoyView: React.FC<HoyViewProps> = ({
                     )}
                   </div>
 
-                  <div
-                    onClick={() => recetaOriginal && onVerRecetaDetalle(recetaOriginal)}
-                    className="cursor-pointer group/title"
-                  >
+                  <div className="group/title">
                     <div className="flex items-center gap-2">
                       <h4
                         className={`text-sm sm:text-base font-bold text-[var(--text-primary)] group-hover/title:text-[var(--accent-protein)] transition-colors ${
@@ -376,7 +377,7 @@ export const HoyView: React.FC<HoyViewProps> = ({
                         {comida.recetaNombre}
                       </h4>
                       <span className="text-[11px] text-[var(--accent-protein)] opacity-0 group-hover/title:opacity-100 transition-opacity flex items-center gap-0.5 shrink-0 font-medium">
-                        <Eye className="w-3.5 h-3.5" /> Ver receta
+                        <Eye className="w-3.5 h-3.5" /> Ver receta y gramos
                       </span>
                     </div>
 
@@ -396,17 +397,14 @@ export const HoyView: React.FC<HoyViewProps> = ({
 
                   {/* Detalle visual de Ingredientes (Cuánto es de cada cosa) */}
                   {recetaOriginal && (
-                    <div
-                      onClick={() => onVerRecetaDetalle(recetaOriginal)}
-                      className="mt-3 pt-2.5 border-t border-[var(--border-subtle)]/70 cursor-pointer group/ing"
-                    >
+                    <div className="mt-3 pt-2.5 border-t border-[var(--border-subtle)]/70 group/ing">
                       <div className="flex items-center justify-between text-xs mb-1.5">
                         <span className="font-bold text-[11px] text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
                           <ChefHat className="w-3.5 h-3.5 text-[var(--accent-protein)]" />
                           Cuánto es de cada cosa:
                         </span>
                         <span className="text-[11px] font-semibold text-[var(--accent-protein)] group-hover/ing:underline flex items-center gap-0.5">
-                          Tocar para ver pasos completos
+                          Tocar receta para ver preparación
                           <ChevronRight className="w-3 h-3" />
                         </span>
                       </div>
@@ -431,9 +429,12 @@ export const HoyView: React.FC<HoyViewProps> = ({
                 {/* Acciones de la comida (Fijar / Cambiar) */}
                 <div className="flex items-center gap-1 shrink-0">
                   <button
-                    onClick={() => handleToggleFijada(catId)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleFijada(catId);
+                    }}
                     title={comida.fijada ? 'Desfijar comida' : 'Fijar comida (no cambiar al generar)'}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
                       comida.fijada
                         ? 'bg-[var(--accent-protein)]/15 text-[var(--accent-protein)]'
                         : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
@@ -443,9 +444,12 @@ export const HoyView: React.FC<HoyViewProps> = ({
                   </button>
 
                   <button
-                    onClick={() => setModalCambiarComida({ categoria: catId, comidaActual: comida })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setModalCambiarComida({ categoria: catId, comidaActual: comida });
+                    }}
                     title="Cambiar esta comida por otra receta"
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
                   >
                     <RefreshCw className="w-4 h-4" />
                   </button>

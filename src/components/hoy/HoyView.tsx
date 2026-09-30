@@ -26,7 +26,7 @@ interface HoyViewProps {
 
 export const HoyView: React.FC<HoyViewProps> = ({
   planDia,
-  perfil,
+  perfil: _perfil,
   todasLasRecetas,
   fechaSeleccionada,
   onCambiarFecha,
@@ -193,7 +193,7 @@ export const HoyView: React.FC<HoyViewProps> = ({
         </button>
       </div>
 
-      {/* Panel de Metas Nutricionales y Barras de Progreso */}
+      {/* Panel de Metas Nutricionales y Barras de Progreso (Inicia en 0 cada nuevo día) */}
       <div className="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -201,9 +201,9 @@ export const HoyView: React.FC<HoyViewProps> = ({
               Balance del Día
             </h2>
             <p className="text-xs text-[var(--text-muted)]">
-              {macrosConsumidos.calorias > 0
-                ? `${macrosConsumidos.calorias} kcal consumidas de ${metaDia.calorias} kcal objetivo`
-                : `Meta calculada para tu objetivo de ${perfil.objetivo}`}
+              {comidasList.filter((c) => c.consumida).length > 0
+                ? `${macrosConsumidos.calorias} kcal consumidas (${comidasList.filter((c) => c.consumida).length}/5 comidas completadas)`
+                : 'Inicia en 0 kcal. Al marcar cada comida como lista (✓), se suman tus calorías y macros.'}
             </p>
           </div>
           <div className="text-right tabular-nums">
@@ -214,21 +214,21 @@ export const HoyView: React.FC<HoyViewProps> = ({
           </div>
         </div>
 
-        {/* Barras de Progreso */}
+        {/* Barras de Progreso: Empiezan en 0% y aumentan con cada comida consumida */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           {/* Calorías */}
           <div className="space-y-1 text-xs">
             <div className="flex justify-between text-[11px]">
               <span className="text-[var(--text-secondary)] font-medium">Calorías Totales</span>
               <span className="font-semibold text-[var(--text-primary)] tabular-nums">
-                {macrosTotalesPlanificados.calorias} / {metaDia.calorias} kcal
+                {macrosConsumidos.calorias} / {metaDia.calorias} kcal
               </span>
             </div>
             <div className="h-2 w-full rounded-full bg-[var(--bg-elevated)] overflow-hidden">
               <div
                 className="h-full bg-[var(--accent-carb)] transition-all duration-300"
                 style={{
-                  width: `${Math.min(100, (macrosTotalesPlanificados.calorias / metaDia.calorias) * 100)}%`,
+                  width: `${Math.min(100, (macrosConsumidos.calorias / metaDia.calorias) * 100)}%`,
                 }}
               />
             </div>
@@ -239,14 +239,14 @@ export const HoyView: React.FC<HoyViewProps> = ({
             <div className="flex justify-between text-[11px]">
               <span className="text-[var(--text-secondary)] font-medium">Proteína</span>
               <span className="font-semibold text-[var(--accent-protein)] tabular-nums">
-                {macrosTotalesPlanificados.proteinas} / {metaDia.proteinas} g
+                {macrosConsumidos.proteinas} / {metaDia.proteinas} g
               </span>
             </div>
             <div className="h-2 w-full rounded-full bg-[var(--bg-elevated)] overflow-hidden">
               <div
                 className="h-full bg-[var(--accent-protein)] transition-all duration-300"
                 style={{
-                  width: `${Math.min(100, (macrosTotalesPlanificados.proteinas / metaDia.proteinas) * 100)}%`,
+                  width: `${Math.min(100, (macrosConsumidos.proteinas / metaDia.proteinas) * 100)}%`,
                 }}
               />
             </div>
@@ -255,16 +255,16 @@ export const HoyView: React.FC<HoyViewProps> = ({
           {/* Carbohidratos */}
           <div className="space-y-1 text-xs">
             <div className="flex justify-between text-[11px]">
-              <span className="text-[var(--text-secondary)] font-medium">Carbohidratos (Ciclados)</span>
+              <span className="text-[var(--text-secondary)] font-medium">Carbohidratos</span>
               <span className="font-semibold text-[var(--text-primary)] tabular-nums">
-                {macrosTotalesPlanificados.carbohidratos} / {metaDia.carbohidratos} g
+                {macrosConsumidos.carbohidratos} / {metaDia.carbohidratos} g
               </span>
             </div>
             <div className="h-2 w-full rounded-full bg-[var(--bg-elevated)] overflow-hidden">
               <div
                 className="h-full bg-[var(--text-secondary)] transition-all duration-300"
                 style={{
-                  width: `${Math.min(100, (macrosTotalesPlanificados.carbohidratos / metaDia.carbohidratos) * 100)}%`,
+                  width: `${Math.min(100, (macrosConsumidos.carbohidratos / metaDia.carbohidratos) * 100)}%`,
                 }}
               />
             </div>
@@ -275,18 +275,28 @@ export const HoyView: React.FC<HoyViewProps> = ({
             <div className="flex justify-between text-[11px]">
               <span className="text-[var(--text-secondary)] font-medium">Fibra Dietética</span>
               <span className="font-semibold text-[var(--text-primary)] tabular-nums">
-                {macrosTotalesPlanificados.fibra} / {metaDia.fibra} g
+                {macrosConsumidos.fibra} / {metaDia.fibra} g
               </span>
             </div>
             <div className="h-2 w-full rounded-full bg-[var(--bg-elevated)] overflow-hidden">
               <div
                 className="h-full bg-[#15803D] transition-all duration-300"
                 style={{
-                  width: `${Math.min(100, (macrosTotalesPlanificados.fibra / metaDia.fibra) * 100)}%`,
+                  width: `${Math.min(100, (macrosConsumidos.fibra / metaDia.fibra) * 100)}%`,
                 }}
               />
             </div>
           </div>
+        </div>
+
+        {/* Indicador de menú planificado y calorías pendientes */}
+        <div className="flex items-center justify-between pt-2 border-t border-[var(--border-subtle)] text-[11px] text-[var(--text-muted)]">
+          <span>Menú planificado para hoy: <strong>{macrosTotalesPlanificados.calorias} kcal</strong> ({macrosTotalesPlanificados.proteinas}g prote)</span>
+          <span className="font-medium text-[var(--accent-protein)]">
+            {metaDia.calorias - macrosConsumidos.calorias > 0
+              ? `Faltan ${metaDia.calorias - macrosConsumidos.calorias} kcal`
+              : '¡Meta diaria completada!'}
+          </span>
         </div>
       </div>
 

@@ -86,10 +86,28 @@ export const App: React.FC = () => {
         })
         .toArray();
 
-      // Si no hay 28 días completos generados o si venían con recetas repetidas, generamos el mes completo
-      const debeRegenerarMes = planes.length < 28;
+      // Si no hay 28 días completos generados o si venían con recetas de calorías bajas desactualizadas (<1100 kcal en desayuno+almuerzo), sincronizamos con las nuevas porciones
+      const tieneCaloriasBajas = planes.some((pl) => {
+        const cal = (pl.comidas.desayuno?.macros.calorias ?? 0) + (pl.comidas.almuerzo?.macros.calorias ?? 0);
+        return cal > 0 && cal < 1100;
+      });
+      const debeRegenerarMes = planes.length < 28 || tieneCaloriasBajas;
       if (p && r.length > 0 && debeRegenerarMes) {
+        const mapaRecetas = new Map(r.map((rec) => [rec.id, rec]));
         const nuevosPlanes = generarMes(fechaLunesActual, p, r, planes);
+        // Sincronizar macros exactos de recetas actualizadas preservando consumida y fijada
+        for (const np of nuevosPlanes) {
+          for (const cat of ['desayuno', 'almuerzo', 'colacion', 'once', 'cena'] as const) {
+            const comida = np.comidas[cat];
+            if (comida) {
+              const recActualizada = mapaRecetas.get(comida.recetaId);
+              if (recActualizada) {
+                comida.macros = recActualizada.macrosPorPorcion;
+                comida.recetaNombre = recActualizada.nombre;
+              }
+            }
+          }
+        }
         await db.plan.bulkPut(nuevosPlanes);
         guardarBackupPlan(nuevosPlanes);
         planes = nuevosPlanes;
@@ -109,11 +127,11 @@ export const App: React.FC = () => {
           c.ingredienteNombre.toLowerCase().includes('pimienta') ||
           c.ingredienteNombre.toLowerCase().includes('orégano') ||
           c.ingredienteNombre.toLowerCase().includes('oregano') ||
-          (c.ingredienteNombre.toLowerCase().includes('pollo') && c.cantidadNecesaria > 5) ||
+          (c.ingredienteNombre.toLowerCase().includes('pollo') && c.cantidadNecesaria > 8) ||
           c.ingredienteNombre.toLowerCase().includes('leche descremada natural')
       );
 
-      if ((compras.length === 0 || compras.length < 15 || tieneItemsObsoletos) && planes.length > 0 && r.length > 0) {
+      if ((compras.length === 0 || compras.length < 15 || tieneItemsObsoletos || tieneCaloriasBajas) && planes.length > 0 && r.length > 0) {
         const nuevaLista = generarListaCompras(planes, r, desp, fechaLunesActual);
         if (nuevaLista.length > 0) {
           const compradosPrevios = new Set(compras.filter((c) => c.comprado).map((c) => c.ingredienteNombre.toLowerCase()));

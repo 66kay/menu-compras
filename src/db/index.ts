@@ -63,7 +63,7 @@ export async function inicializarBaseDatos(): Promise<void> {
       }
     }
 
-    const RECETAS_VERSION = 'v10-batch-cooking-meal-prep-kraft-toscana';
+    const RECETAS_VERSION = 'v11-2800kcal-balance-ajustado';
     const versionGuardada = localStorage.getItem('menu_recetas_version');
     const conteoRecetas = await db.recetas.count();
 

@@ -36,9 +36,7 @@ function normalizarNombreIngrediente(nombre: string): string {
   if (n.includes('leche')) return 'Leche descremada con proteína (Protein+)';
   if (n.includes('yogurt') && n.includes('protein')) return 'Yogurt tipo griego natural protein';
   if (n.includes('quesillo')) return 'Quesillo de vaca sureño';
-  if (n.includes('ricotta')) return 'Quesillo de vaca sureño';
-  if (n.includes('pierna') || n.includes('jamon pierna') || n.includes('jamón pierna') || n.includes('jamon tradicional') || n.includes('jamón tradicional')) return 'Jamón Pierna tradicional envasado';
-  if (n.includes('jamón de') || n.includes('jamon de pavo') || n.includes('pechuga de pavo') || n.includes('pavo')) return 'Pechuga / Jamón de pavo';
+  if (n.includes('jamon') || n.includes('jamón') || n.includes('pierna')) return 'Jamón Pierna tradicional envasado';
   if (n.includes('arroz')) return 'Arroz blanco grado 1';
   if (n.includes('papas') || n.includes('papa')) return 'Papas granel';
   if (n.includes('zapallo camote')) return 'Zapallo camote';

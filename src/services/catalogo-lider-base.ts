@@ -1,4 +1,4 @@
-import type { Producto } from '../types';
+import type { Producto, CategoriaPasillo } from '../types';
 
 /**
  * Catálogo Base de Productos de Líder (Sucursal Casona, Osorno)
@@ -6,6 +6,136 @@ import type { Producto } from '../types';
  * Gramajes y Fotos reales de los servidores de Walmart Chile (i5.walmartimages.cl).
  */
 export const CATALOGO_LIDER_BASE: Producto[] = [
+  {
+    "id": "lid-00780467391411",
+    "sku": "00780467391411",
+    "nombre": "Suplemento de proteína Whey chocolate tarro, 653 g",
+    "marca": "Wild Protein Pro",
+    "precio": 29990,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/1eff12c0-f746-4af8-b14c-188b07eaf0c2.4d50fb8d6b418c63053d8df5262b0215.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/salud-y-suplementos/00780467391411",
+    "categoriaPasillo": "despensa_abarrotes",
+    "fechaActualizacion": "2026-09-29T23:10:13.686Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 95,
+    "sellosNegros": 0,
+    "cantidadPresentacion": "653 g",
+    "precioPorUnidadMedida": "$45.926 x kg",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "whey protein",
+    "macros100g": {
+      "calorias": 390,
+      "proteinas": 80,
+      "carbohidratos": 6,
+      "grasas": 4,
+      "fibra": 1
+    }
+  },
+  {
+    "id": "lid-00780191600010",
+    "sku": "00780191600010",
+    "nombre": "Aceite Vegetal Botella, 900 ml",
+    "marca": "Lider",
+    "precio": 1890,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/6cfb160b-85d8-4f51-b8ae-8868f0473a21.464b732688ca85cebe779c162cfba788.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/aceites-y-aderezos/00780191600010",
+    "categoriaPasillo": "despensa_abarrotes",
+    "fechaActualizacion": "2026-09-29T23:10:13.689Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 88,
+    "sellosNegros": 0,
+    "cantidadPresentacion": "900 ml",
+    "precioPorUnidadMedida": "$2.100 x lt",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "aceite vegetal de cocina",
+    "macros100g": {
+      "calorias": 884,
+      "proteinas": 0,
+      "carbohidratos": 0,
+      "grasas": 100,
+      "fibra": 0
+    }
+  },
+  {
+    "id": "lid-00780460872040",
+    "sku": "00780460872040",
+    "nombre": "Aceite De Oliva Extra Virgen Botella, 500 ml",
+    "marca": "Lider",
+    "precio": 4990,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/c356ba7c-d7e5-4e5c-b564-9f2d1b3f06da.fdd45c653121b8c44d17aeccf221d95c.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/aceites-y-aderezos/00780460872040",
+    "categoriaPasillo": "despensa_abarrotes",
+    "fechaActualizacion": "2026-09-29T23:10:13.689Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 92,
+    "sellosNegros": 0,
+    "cantidadPresentacion": "500 ml",
+    "precioPorUnidadMedida": "$9.980 x lt",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "aceite oliva virgen extra",
+    "macros100g": {
+      "calorias": 884,
+      "proteinas": 0,
+      "carbohidratos": 0,
+      "grasas": 100,
+      "fibra": 0
+    }
+  },
+  {
+    "id": "lid-00780461880010",
+    "sku": "00780461880010",
+    "nombre": "Arándanos Frescos Pote, 125 g",
+    "marca": "Hortifrut",
+    "precio": 1990,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/5e478950-8b1b-41ca-a8bf-e08ecbf0c33a.4fc685a4cf68019e1bfa8294a5c9a495.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/frutas/00780461880010",
+    "categoriaPasillo": "frutas_verduras",
+    "fechaActualizacion": "2026-09-29T23:10:13.688Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 95,
+    "sellosNegros": 0,
+    "cantidadPresentacion": "125 g",
+    "precioPorUnidadMedida": "$15.920 x kg",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "arandanos frescos",
+    "macros100g": {
+      "calorias": 57,
+      "proteinas": 0.7,
+      "carbohidratos": 14,
+      "grasas": 0.3,
+      "fibra": 2.4
+    }
+  },
+  {
+    "id": "lid-00780182500010",
+    "sku": "00780182500010",
+    "nombre": "Té Negro Ceilán Bolsa, 20 Un",
+    "marca": "Club",
+    "precio": 1390,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/578f7e91-72f1-4db4-a957-c81b67ea920b.61ef2f205256e6f9bebeee8ec77a3399.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/cafe-y-te/00780182500010",
+    "categoriaPasillo": "bebidas",
+    "fechaActualizacion": "2026-09-29T23:10:13.689Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 90,
+    "sellosNegros": 0,
+    "cantidadPresentacion": "20 Un",
+    "precioPorUnidadMedida": "$69,5 x un",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "te negro ceilan",
+    "macros100g": {
+      "calorias": 1,
+      "proteinas": 0,
+      "carbohidratos": 0.2,
+      "grasas": 0,
+      "fibra": 0
+    }
+  },
   {
     "id": "lid-00780464918001",
     "sku": "00780464918001",
@@ -1818,136 +1948,6 @@ export const CATALOGO_LIDER_BASE: Producto[] = [
     "precioPorUnidadMedida": "$5.742 x kg",
     "disponibleEnCasona": true,
     "terminoBusqueda": "yogurt protein soprole",
-    "macros100g": {
-      "calorias": 70,
-      "proteinas": 3,
-      "carbohidratos": 12,
-      "grasas": 1,
-      "fibra": 2
-    }
-  },
-  {
-    "id": "lid-00000005736676",
-    "sku": "00000005736676",
-    "nombre": "Secaplato S Blanco, 1 Un",
-    "marca": "Haus",
-    "precio": 4990,
-    "precioReferencial": false,
-    "urlFoto": "https://i5.walmartimages.cl/asr/cc3ed4ad-ee94-464b-b97b-c735574271a2.d941b91049324ddc7a308ab2e83d9a96.jpeg",
-    "urlProducto": "https://super.lider.cl/ip/menaje-cocina/00000005736676",
-    "categoriaPasillo": "frutas_verduras",
-    "fechaActualizacion": "2026-09-29T23:10:13.690Z",
-    "vendedorTipo": "directo_lider",
-    "puntajeNutricional": 88,
-    "sellosNegros": 0,
-    "cantidadPresentacion": "1 un",
-    "precioPorUnidadMedida": "$4.990 x un",
-    "disponibleEnCasona": true,
-    "terminoBusqueda": "arandanos frescos",
-    "macros100g": {
-      "calorias": 70,
-      "proteinas": 3,
-      "carbohidratos": 12,
-      "grasas": 1,
-      "fibra": 2
-    }
-  },
-  {
-    "id": "lid-00140546532051",
-    "sku": "00140546532051",
-    "nombre": "Plato S Mix1 Perro, 1 Un",
-    "marca": "Kumar",
-    "precio": 3490,
-    "precioReferencial": false,
-    "urlFoto": "https://i5.walmartimages.cl/asr/51f8d299-4d87-470f-bcbe-a1c3b971d60d.404811b5bbd838cb43bda683b1b24327.jpeg",
-    "urlProducto": "https://super.lider.cl/ip/perro/00140546532051",
-    "categoriaPasillo": "frutas_verduras",
-    "fechaActualizacion": "2026-09-29T23:10:13.690Z",
-    "vendedorTipo": "directo_lider",
-    "puntajeNutricional": 88,
-    "sellosNegros": 0,
-    "cantidadPresentacion": "1 un",
-    "precioPorUnidadMedida": "$3.490 x un",
-    "disponibleEnCasona": true,
-    "terminoBusqueda": "arandanos frescos",
-    "macros100g": {
-      "calorias": 70,
-      "proteinas": 3,
-      "carbohidratos": 12,
-      "grasas": 1,
-      "fibra": 2
-    }
-  },
-  {
-    "id": "lid-00340546542051",
-    "sku": "00340546542051",
-    "nombre": "Plato S Mix2 Perro, 1 Un",
-    "marca": "Kumar",
-    "precio": 3990,
-    "precioReferencial": false,
-    "urlFoto": "https://i5.walmartimages.cl/asr/f565e4f9-4921-4409-81dd-98f89f303e30.4209c4049c690b6447827cf9a8e88efb.jpeg",
-    "urlProducto": "https://super.lider.cl/ip/perro/00340546542051",
-    "categoriaPasillo": "frutas_verduras",
-    "fechaActualizacion": "2026-09-29T23:10:13.690Z",
-    "vendedorTipo": "directo_lider",
-    "puntajeNutricional": 88,
-    "sellosNegros": 0,
-    "cantidadPresentacion": "1 un",
-    "precioPorUnidadMedida": "$3.990 x un",
-    "disponibleEnCasona": true,
-    "terminoBusqueda": "arandanos frescos",
-    "macros100g": {
-      "calorias": 70,
-      "proteinas": 3,
-      "carbohidratos": 12,
-      "grasas": 1,
-      "fibra": 2
-    }
-  },
-  {
-    "id": "lid-00002251799500",
-    "sku": "00002251799500",
-    "nombre": "Collar S Gris Perro, 1 Un",
-    "marca": "Zeus",
-    "precio": 3990,
-    "precioReferencial": false,
-    "urlFoto": "https://i5.walmartimages.cl/asr/ecac6753-c26a-4441-8ad7-c88c90be5eec.4eb050764c5fa05d29d7beaad9ed99bd.jpeg",
-    "urlProducto": "https://super.lider.cl/ip/perro/00002251799500",
-    "categoriaPasillo": "frutas_verduras",
-    "fechaActualizacion": "2026-09-29T23:10:13.690Z",
-    "vendedorTipo": "directo_lider",
-    "puntajeNutricional": 88,
-    "sellosNegros": 0,
-    "cantidadPresentacion": "1 un",
-    "precioPorUnidadMedida": "$3.990 x un",
-    "disponibleEnCasona": true,
-    "terminoBusqueda": "arandanos frescos",
-    "macros100g": {
-      "calorias": 70,
-      "proteinas": 3,
-      "carbohidratos": 12,
-      "grasas": 1,
-      "fibra": 2
-    }
-  },
-  {
-    "id": "lid-00779279800911",
-    "sku": "00779279800911",
-    "nombre": "Cerveza S/A lager lata, 473 ml",
-    "marca": "Quilmes",
-    "precio": 4950,
-    "precioReferencial": false,
-    "urlFoto": "https://i5.walmartimages.cl/asr/18dd040a-decc-46cd-bc19-a1f11fd28f8b.c7787774d00d2f6d35ff857bc0181448.jpeg",
-    "urlProducto": "https://super.lider.cl/ip/sin-alcohol/00779279800911",
-    "categoriaPasillo": "frutas_verduras",
-    "fechaActualizacion": "2026-09-29T23:10:13.690Z",
-    "vendedorTipo": "directo_lider",
-    "puntajeNutricional": 88,
-    "sellosNegros": 0,
-    "cantidadPresentacion": "473 g",
-    "precioPorUnidadMedida": "$1.744 x lt",
-    "disponibleEnCasona": true,
-    "terminoBusqueda": "arandanos frescos",
     "macros100g": {
       "calorias": 70,
       "proteinas": 3,
@@ -4193,32 +4193,6 @@ export const CATALOGO_LIDER_BASE: Producto[] = [
     }
   },
   {
-    "id": "lid-00780461714319",
-    "sku": "00780461714319",
-    "nombre": "Pisco Manzana Verde 35° Botella, 750",
-    "marca": "Mal Paso",
-    "precio": 10890,
-    "precioReferencial": false,
-    "urlFoto": "https://i5.walmartimages.cl/asr/d87d7b82-8315-4cd6-893e-4d1894bde840.91292e456da718a649456bb7660c4ca4.jpeg",
-    "urlProducto": "https://super.lider.cl/ip/destilados/00780461714319",
-    "categoriaPasillo": "frutas_verduras",
-    "fechaActualizacion": "2026-09-29T23:10:13.691Z",
-    "vendedorTipo": "directo_lider",
-    "puntajeNutricional": 88,
-    "sellosNegros": 0,
-    "cantidadPresentacion": "1 un",
-    "precioPorUnidadMedida": "$14.520 x lt",
-    "disponibleEnCasona": true,
-    "terminoBusqueda": "manzana verde",
-    "macros100g": {
-      "calorias": 70,
-      "proteinas": 3,
-      "carbohidratos": 12,
-      "grasas": 1,
-      "fibra": 2
-    }
-  },
-  {
     "id": "lid-00780283200014",
     "sku": "00780283200014",
     "nombre": "Jugo De Manzana Verde 100% Puro Botella, 1000 ml",
@@ -4869,32 +4843,6 @@ export const CATALOGO_LIDER_BASE: Producto[] = [
     }
   },
   {
-    "id": "lid-00003615400005",
-    "sku": "00003615400005",
-    "nombre": "Ají Extracto Verde Botella, 100 ml",
-    "marca": "Diaguita",
-    "precio": 3990,
-    "precioReferencial": false,
-    "urlFoto": "https://i5.walmartimages.cl/asr/83a5733c-2c30-4dce-8650-75e8e0f9543e.4a39922c8afeeeea08513935f22bd941.jpeg",
-    "urlProducto": "https://super.lider.cl/ip/salsas/00003615400005",
-    "categoriaPasillo": "frutas_verduras",
-    "fechaActualizacion": "2026-09-29T23:10:13.691Z",
-    "vendedorTipo": "directo_lider",
-    "puntajeNutricional": 88,
-    "sellosNegros": 0,
-    "cantidadPresentacion": "100 g",
-    "precioPorUnidadMedida": "$39.900 x lt",
-    "disponibleEnCasona": true,
-    "terminoBusqueda": "aji verde",
-    "macros100g": {
-      "calorias": 70,
-      "proteinas": 3,
-      "carbohidratos": 12,
-      "grasas": 1,
-      "fibra": 2
-    }
-  },
-  {
     "id": "lid-00040000108657",
     "sku": "00040000108657",
     "nombre": "Pimiento Verde Malla. Imperfecto, 2 Un",
@@ -5149,12 +5097,140 @@ export function buscarEnCatalogoBase(termino: string): Producto[] {
 }
 
 /**
- * Obtiene la mejor opción recomendada para un término de búsqueda.
+ * Obtiene la mejor opción recomendada para un término de búsqueda,
+ * priorizando presentaciones accesibles y de mejor relación precio-calidad.
  */
-export function obtenerMejorOpcionBase(termino: string): Producto | undefined {
-  const candidatos = buscarEnCatalogoBase(termino);
+export function obtenerMejorOpcionBase(
+  termino: string,
+  categoriaPasillo?: CategoriaPasillo
+): Producto | undefined {
+  const norm = normalizarTexto(termino);
+  let candidatos = buscarEnCatalogoBase(termino);
   if (candidatos.length === 0) return undefined;
+
+  // Filtrar estrictamente por pasillo si se especifica (para evitar que carne coincida con especias u hogar)
+  if (categoriaPasillo) {
+    const delPasillo = candidatos.filter((p) => p.categoriaPasillo === categoriaPasillo);
+    if (delPasillo.length > 0) {
+      candidatos = delPasillo;
+    }
+  }
+
+  // Preferencias específicas para optimizar presupuesto en la canasta básica de Líder
+  if (norm.includes('posta negra') || norm.includes('tartaro') || norm.includes('molida')) {
+    const carnePosta = candidatos.find(
+      (p) =>
+        p.categoriaPasillo === 'carnes_aves' &&
+        (p.nombre.toLowerCase().includes('posta') || p.nombre.toLowerCase().includes('molida'))
+    );
+    if (carnePosta) return carnePosta;
+  }
+  if (norm.includes('huevo') || norm.includes('clara')) {
+    const pack30 = candidatos.find((p) => p.sku === '00780413300634' || (p.nombre.includes('30 Un') && p.precio < 8000));
+    if (pack30) return pack30;
+  }
+  if (norm.includes('pavo')) {
+    const pavoGranel = candidatos.find(
+      (p) => p.categoriaPasillo === 'carnes_aves' && p.nombre.toLowerCase().includes('granel') && p.precio < 12000
+    );
+    if (pavoGranel) return pavoGranel;
+  }
+  if (norm.includes('tomate')) {
+    const tomateGranel = candidatos.find(
+      (p) => p.nombre.toLowerCase().includes('larga vida') || p.sku === '00200001000000'
+    );
+    if (tomateGranel) return tomateGranel;
+  }
+  if (norm.includes('platano') || norm.includes('plátano')) {
+    const platanoGranel = candidatos.find(
+      (p) => p.nombre.toLowerCase().includes('granel') && !p.nombre.toLowerCase().includes('baby')
+    );
+    if (platanoGranel) return platanoGranel;
+  }
+  if (norm.includes('aceite')) {
+    const aceiteEconomico = candidatos.find(
+      (p) => (p.sku === '00780191600010' || p.sku === '00780460872040' || p.precio < 6000) && p.categoriaPasillo === 'despensa_abarrotes'
+    );
+    if (aceiteEconomico) return aceiteEconomico;
+  }
+  if (norm.includes('avena')) {
+    const avenaBolsa = candidatos.find(
+      (p) =>
+        !p.nombre.toLowerCase().includes('frutilla') &&
+        !p.nombre.toLowerCase().includes('manzana') &&
+        p.categoriaPasillo === 'panaderia_cereales'
+    );
+    if (avenaBolsa) return avenaBolsa;
+  }
+  if (norm.includes('espinaca')) {
+    const espinaca150 = candidatos.find(
+      (p) => (p.cantidadPresentacion === '150 g' || p.nombre.includes('150 g')) && p.precio < 2500
+    );
+    if (espinaca150) return espinaca150;
+  }
+  if (norm.includes('pechuga') || norm.includes('pollo')) {
+    const polloBandeja = candidatos.find(
+      (p) => p.categoriaPasillo === 'carnes_aves' && p.precio < 6000 && p.nombre.toLowerCase().includes('deshuesada')
+    );
+    if (polloBandeja) return polloBandeja;
+  }
+  if (norm.includes('atun') || norm.includes('atún')) {
+    const atunLata = candidatos.find(
+      (p) => p.precio < 1600 && p.nombre.toLowerCase().includes('agua')
+    );
+    if (atunLata) return atunLata;
+  }
+  if (norm.includes('manzana')) {
+    const manzanaFruta = candidatos.find(
+      (p) =>
+        p.categoriaPasillo === 'frutas_verduras' &&
+        (p.sku === '00203010000000' || p.sku === '00040005003113' || (p.nombre.toLowerCase().includes('manzana') && !p.nombre.toLowerCase().includes('gelatina') && !p.nombre.toLowerCase().includes('jugo')))
+    );
+    if (manzanaFruta) return manzanaFruta;
+  }
+  if (norm.includes('papa')) {
+    const papaFruta = candidatos.find(
+      (p) =>
+        p.categoriaPasillo === 'frutas_verduras' &&
+        (p.sku === '00200005000000' || p.nombre.toLowerCase().includes('papas granel') || p.nombre.toLowerCase().startsWith('papa'))
+    );
+    if (papaFruta) return papaFruta;
+  }
+  if (norm.includes('ricotta')) {
+    const ricottaProd = candidatos.find(
+      (p) => p.sku === '00780293000143' || p.sku === '00780293000232' || p.nombre.toLowerCase().includes('ricotta')
+    );
+    if (ricottaProd) return ricottaProd;
+  }
+  if (norm.includes('arandano') || norm.includes('arándano')) {
+    const arandanoProd = candidatos.find(
+      (p) => p.sku === '00780461880010' || p.nombre.toLowerCase().includes('arándano') || p.nombre.toLowerCase().includes('arandano')
+    );
+    if (arandanoProd) return arandanoProd;
+  }
+  if (norm.includes('te ') || norm === 'te' || norm.includes('té')) {
+    const teProd = candidatos.find((p) => p.sku === '00780182500010' || p.nombre.toLowerCase().includes('té') || p.nombre.toLowerCase().includes('te '));
+    if (teProd) return teProd;
+  }
+  if (norm.includes('leche') && norm.includes('protein')) {
+    const lecheProt1L = candidatos.find(
+      (p) => p.sku === '00780292001218' || (p.nombre.toLowerCase().includes('protein') && p.nombre.toLowerCase().includes('1000 ml'))
+    );
+    if (lecheProt1L) return lecheProt1L;
+  }
+  if (norm.includes('leche') && !norm.includes('protein')) {
+    const leche1L = candidatos.find(
+      (p) => (p.sku === '00780292000008' || p.cantidadPresentacion === '1 L' || p.nombre.includes('1 L') || p.nombre.includes('1 l')) && p.categoriaPasillo === 'lacteos_huevos'
+    );
+    if (leche1L) return leche1L;
+    const lecheEconomica = candidatos.find(
+      (p) => p.precio < 1800 && p.categoriaPasillo === 'lacteos_huevos'
+    );
+    if (lecheEconomica) return lecheEconomica;
+  }
+
+  // De los candidatos restantes, priorizar el más económico
   return candidatos.reduce((mejor, actual) =>
-    (actual.puntajeNutricional ?? 0) > (mejor.puntajeNutricional ?? 0) ? actual : mejor
+    actual.precio < mejor.precio ? actual : mejor
   );
 }

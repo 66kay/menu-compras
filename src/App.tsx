@@ -16,9 +16,11 @@ import { SemanaView } from './components/semana/SemanaView';
 import { ComprasView } from './components/compras/ComprasView';
 import { RecetasView } from './components/recetas/RecetasView';
 import { MetasView } from './components/metas/MetasView';
+import { ChatbotNutricionalModal } from './components/ia/ChatbotNutricionalModal';
 import { generarMes } from './logic/generador';
 import { generarListaCompras } from './logic/lista-compras';
 import { obtenerMejorOpcionBase } from './services/catalogo-lider-base';
+import { Sparkles } from 'lucide-react';
 
 function getLunesDeEstaSemana(fecha: Date = new Date()): string {
   const d = new Date(fecha);
@@ -42,6 +44,13 @@ export const App: React.FC = () => {
     () => new Date().toISOString().split('T')[0] || ''
   );
   const [recetaDetalle, setRecetaDetalle] = useState<Receta | null>(null);
+  const [modalChatbotAbierto, setModalChatbotAbierto] = useState<boolean>(false);
+  const [ingredienteChatbot, setIngredienteChatbot] = useState<string | undefined>(undefined);
+
+  const handleAbrirChatbot = (ingrediente?: string) => {
+    setIngredienteChatbot(ingrediente);
+    setModalChatbotAbierto(true);
+  };
 
   const fechaLunesActual = getLunesDeEstaSemana();
 
@@ -86,7 +95,16 @@ export const App: React.FC = () => {
         .filter((c) => c.fechaSemana === fechaLunesActual)
         .toArray();
 
-      if ((compras.length === 0 || compras.length < 15) && planes.length > 0 && r.length > 0) {
+      const tieneItemsObsoletos = compras.some(
+        (c) =>
+          c.ingredienteNombre.toLowerCase().includes('sal') ||
+          c.ingredienteNombre.toLowerCase().includes('pimienta') ||
+          c.ingredienteNombre.toLowerCase().includes('orégano') ||
+          c.ingredienteNombre.toLowerCase().includes('oregano') ||
+          (c.ingredienteNombre.toLowerCase().includes('pollo') && c.cantidadNecesaria > 5)
+      );
+
+      if ((compras.length === 0 || compras.length < 15 || tieneItemsObsoletos) && planes.length > 0 && r.length > 0) {
         const nuevaLista = generarListaCompras(planes, r, desp, fechaLunesActual);
         if (nuevaLista.length > 0) {
           await db.compras.clear();
@@ -98,7 +116,7 @@ export const App: React.FC = () => {
         let cambio = false;
         for (const item of compras) {
           if (!item.productoSeleccionado || !item.productoSeleccionado.urlFoto.includes('walmartimages.cl')) {
-            const mejor = obtenerMejorOpcionBase(item.ingredienteNombre);
+            const mejor = obtenerMejorOpcionBase(item.ingredienteNombre, item.categoriaPasillo);
             if (mejor) {
               item.productoSeleccionado = mejor;
               cambio = true;
@@ -208,6 +226,7 @@ export const App: React.FC = () => {
         caloriasMeta={planDiaActual?.metaDia.calorias ?? 3200}
         proteinaConsumida={proteinaConsumidaHoy}
         proteinaMeta={planDiaActual?.metaDia.proteinas ?? 219}
+        onAbrirChatbot={() => handleAbrirChatbot()}
       />
 
       {/* Contenedor Principal (con margen lateral en escritorio para barra fija) */}
@@ -247,6 +266,7 @@ export const App: React.FC = () => {
               despensa={despensa}
               fechaLunesActual={fechaLunesActual}
               onActualizarItems={handleActualizarCompras}
+              onAbrirChatbot={handleAbrirChatbot}
             />
           )}
 
@@ -271,6 +291,27 @@ export const App: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Botón Flotante para Asistente & Escáner IA de Pasillo en Líder */}
+      <button
+        onClick={() => handleAbrirChatbot()}
+        title="Escáner IA: Lee la tabla nutricional de cualquier producto o consulta reemplazos recomendados"
+        className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-40 px-4 py-3 rounded-2xl bg-[var(--accent-protein)] text-black font-extrabold text-xs sm:text-sm shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer border border-black/10"
+      >
+        <Sparkles className="w-4 h-4 fill-black" />
+        <span className="hidden sm:inline">Escáner IA Líder</span>
+        <span className="sm:hidden">Escáner IA</span>
+      </button>
+
+      {/* Modal de Asistente IA y Escáner de Tabla Nutricional OCR */}
+      <ChatbotNutricionalModal
+        abierto={modalChatbotAbierto}
+        onCerrar={() => {
+          setModalChatbotAbierto(false);
+          setIngredienteChatbot(undefined);
+        }}
+        ingredienteInicial={ingredienteChatbot}
+      />
 
       {/* Barra de Navegación Fija (Móvil inferior + Desktop lateral) */}
       <NavigationBar

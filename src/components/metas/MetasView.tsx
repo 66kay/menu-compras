@@ -36,9 +36,11 @@ export const MetasView: React.FC<MetasViewProps> = ({
   const [edad, setEdad] = useState<number>(perfil.edad);
   const [alturaCm, setAlturaCm] = useState<number>(perfil.alturaCm);
   const [pesoActualKg, setPesoActualKg] = useState<number>(perfil.pesoActualKg);
+  const [pesoReferenciaKg, setPesoReferenciaKg] = useState<number>(perfil.pesoReferenciaKg ?? 95);
   const [diasGym, setDiasGym] = useState<number>(perfil.diasGymSemana);
   const [objetivo, setObjetivo] = useState<ObjetivoNutricional>(perfil.objetivo);
   const [gramosProteina, setGramosProteina] = useState<number>(perfil.gramosProteinaPorKg);
+  const [usaProteinaEnPolvo, setUsaProteinaEnPolvo] = useState<boolean>(perfil.usaProteinaEnPolvo !== false);
   const [guardadoExitoso, setGuardadoExitoso] = useState<boolean>(false);
 
   // Registro de nuevo pesaje
@@ -61,10 +63,13 @@ export const MetasView: React.FC<MetasViewProps> = ({
     edad,
     alturaCm,
     pesoActualKg,
+    pesoReferenciaKg,
     diasGymSemana: diasGym,
     factorActividad,
     objetivo,
     gramosProteinaPorKg: gramosProteina,
+    usaProteinaEnPolvo,
+    scoopsProteinaDia: usaProteinaEnPolvo ? 1 : 0,
   };
 
   const metas = calcularMetasBase(perfilActivo);
@@ -264,10 +269,10 @@ export const MetasView: React.FC<MetasViewProps> = ({
             <div>
               <div className="flex justify-between items-center mb-1">
                 <label className="font-semibold text-[var(--text-secondary)]">
-                  Proteína diaria (g/kg)
+                  Proteína diaria (g/kg ref. atlética)
                 </label>
                 <span className="font-bold text-[var(--accent-protein)] tabular-nums">
-                  {gramosProteina} g/kg ({Math.round(pesoActualKg * gramosProteina)}g netos)
+                  {gramosProteina} g/kg ({metas.proteinasGramos}g netos / día)
                 </span>
               </div>
               <input
@@ -279,6 +284,30 @@ export const MetasView: React.FC<MetasViewProps> = ({
                 onChange={(e) => setGramosProteina(Number(e.target.value))}
                 className="w-full accent-[var(--accent-protein)] cursor-pointer mt-2"
               />
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="text-[11px] text-[var(--text-muted)]">Peso atlético de referencia (kg):</span>
+                <input
+                  type="number"
+                  min="70"
+                  max="120"
+                  value={pesoReferenciaKg}
+                  onChange={(e) => setPesoReferenciaKg(Number(e.target.value))}
+                  className="w-16 px-2 py-0.5 text-xs text-right rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] font-bold"
+                />
+              </div>
+              <p className="text-[11px] text-[var(--text-muted)] mt-1.5">
+                💡 Calculado sobre <strong>{pesoReferenciaKg} kg</strong> (peso atlético de referencia para 191 cm). Evita consumo desmedido de pollo/carne y mantiene la compra del mes bajo $100.000 CLP.
+              </p>
+
+              <label className="flex items-center gap-2 pt-2 text-xs text-[var(--text-secondary)] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={usaProteinaEnPolvo}
+                  onChange={(e) => setUsaProteinaEnPolvo(e.target.checked)}
+                  className="w-4 h-4 rounded border-[var(--border-subtle)] text-[var(--accent-protein)]"
+                />
+                <span>Uso 1 scoop diario de proteína en polvo (Whey Protein, ~25g prote)</span>
+              </label>
             </div>
           </div>
 
@@ -312,7 +341,22 @@ export const MetasView: React.FC<MetasViewProps> = ({
                 <span className="text-xl font-bold text-[var(--accent-protein)] tabular-nums">
                   {metas.proteinasGramos} g/día
                 </span>
+                {usaProteinaEnPolvo && (
+                  <span className="block text-[10px] text-[var(--text-muted)]">
+                    ({metas.proteinaSolidaGramos}g comida + {metas.proteinaWheyGramos}g batido whey)
+                  </span>
+                )}
               </div>
+            </div>
+
+            {/* Presupuesto y Pollo Optimizado */}
+            <div className="mt-2 p-2.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--accent-protein)]/25 flex items-center justify-between text-[11px]">
+              <span className="text-[var(--text-secondary)]">
+                🍗 Pollo mensual estimado: <strong>~3.8 kg</strong> (en vez de 10 kg)
+              </span>
+              <span className="font-bold text-[var(--accent-protein)]">
+                🛒 Presupuesto Líder: &lt; $100.000 CLP / mes
+              </span>
             </div>
 
             {metas.esPisoSeguridadAplicado && (

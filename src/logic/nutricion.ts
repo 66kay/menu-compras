@@ -6,6 +6,9 @@ export interface CalculoMetabolico {
   caloriasObjetivo: number; // Calorías diarias objetivo promedio
   esPisoSeguridadAplicado: boolean; // True si se limitó por TMB
   proteinasGramos: number; // Proteína diaria promedio
+  proteinaSolidaGramos: number; // Proteína proveniente de alimentos enteros
+  proteinaWheyGramos: number; // Proteína aportada por batido de proteína en polvo
+  pesoBaseCalculo: number; // Peso de referencia utilizado para el cálculo (ej. 95 kg)
   carbohidratosGramos: number; // Carbohidratos diarios promedio
   grasasGramos: number; // Grasas diarias promedio
   fibraGramos: number; // Fibra diaria recomendada (≥35g)
@@ -63,17 +66,32 @@ export function calcularMetasBase(perfil: PerfilUsuario): CalculoMetabolico {
     }
   }
 
-  // Cálculo de Proteína (1.6 a 2.2 g/kg sobre peso de referencia o peso actual)
-  const pesoBase = perfil.pesoReferenciaKg ?? perfil.pesoActualKg;
+  // Cálculo de Proteína:
+  // En ciencias del deporte (ISSN, Morton 2018, Helms), para personas con peso corporal elevado
+  // o en recomposición muscular, la proteína se calcula sobre la masa libre de grasa o el peso
+  // atlético de referencia según estatura (para 191 cm, ~90-95 kg), NUNCA sobre 137 kg.
+  // Esto evita cantidades absurdas de carne (>10 kg al mes) y protege la economía familiar.
+  const pesoBase =
+    perfil.pesoReferenciaKg && perfil.pesoReferenciaKg > 0
+      ? perfil.pesoReferenciaKg
+      : perfil.pesoActualKg > 105
+      ? 95
+      : perfil.pesoActualKg;
+
   let proteinasGramos = Math.round(pesoBase * perfil.gramosProteinaPorKg);
   if (perfil.proteinaPersonalizada && perfil.proteinaPersonalizada > 0) {
     proteinasGramos = perfil.proteinaPersonalizada;
   }
 
+  // Desglose de proteína si el usuario cuenta con proteína en polvo
+  const scoops = perfil.usaProteinaEnPolvo !== false ? (perfil.scoopsProteinaDia ?? 1) : 0;
+  const proteinaWheyGramos = scoops * 25; // 25g de proteína pura por scoop estándar
+  const proteinaSolidaGramos = Math.max(80, proteinasGramos - proteinaWheyGramos);
+
   // Calorías de la proteína (4 kcal/g)
   const caloriasProteina = proteinasGramos * 4;
 
-  // Grasas saludables: ~0.8g por kg o mínimo 20% de calorías
+  // Grasas saludables: ~0.75g por kg de peso de referencia
   const gramosGrasasMinimo = Math.round(pesoBase * 0.75);
   const caloriasGrasas = gramosGrasasMinimo * 9;
   const grasasGramos = gramosGrasasMinimo;
@@ -82,7 +100,7 @@ export function calcularMetasBase(perfil: PerfilUsuario): CalculoMetabolico {
   const caloriasRestantes = Math.max(0, caloriasObjetivo - caloriasProteina - caloriasGrasas);
   const carbohidratosGramos = Math.round(caloriasRestantes / 4);
 
-  // Fibra: 35g/día para un volumen corporal de 137kg y salud digestiva
+  // Fibra: 35g/día para un volumen corporal de 191 cm y salud digestiva
   const fibraGramos = 35;
 
   return {
@@ -91,6 +109,9 @@ export function calcularMetasBase(perfil: PerfilUsuario): CalculoMetabolico {
     caloriasObjetivo,
     esPisoSeguridadAplicado,
     proteinasGramos,
+    proteinaSolidaGramos,
+    proteinaWheyGramos,
+    pesoBaseCalculo: pesoBase,
     carbohidratosGramos,
     grasasGramos,
     fibraGramos,

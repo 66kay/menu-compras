@@ -22,7 +22,7 @@ export const PerfilUsuarioSchema = z.object({
   sexo: z.literal('hombre').default('hombre'),
   alturaCm: z.number().min(120).max(230),
   pesoActualKg: z.number().min(40).max(250),
-  pesoReferenciaKg: z.number().min(40).max(250).optional(),
+  pesoReferenciaKg: z.number().min(40).max(250).default(95),
   diasGymSemana: z.number().int().min(1).max(7).default(4),
   duracionEntrenoHoras: z.number().min(0.5).max(4).default(2),
   factorActividad: z.number().min(1.2).max(2.2).default(1.55),
@@ -31,6 +31,8 @@ export const PerfilUsuarioSchema = z.object({
   deficitsKcal: z.number().min(-1000).max(1000).default(-250),
   caloriasPersonalizadas: z.number().optional(),
   proteinaPersonalizada: z.number().optional(),
+  usaProteinaEnPolvo: z.boolean().default(true),
+  scoopsProteinaDia: z.number().min(0).max(3).default(1),
   exclusionesAmbiguas: ExclusionAmbiguaSchema.default({
     arvejasVerdes: false,
     porotosVerdes: false,

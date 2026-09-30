@@ -16,6 +16,7 @@ import {
   Snowflake,
   Coffee,
   ExternalLink,
+  Camera,
 } from 'lucide-react';
 import type { ItemCompra, CategoriaPasillo, PlanDia, Receta, ItemDespensa } from '../../types';
 import { TITULOS_PASILLOS, generarListaCompras } from '../../logic/lista-compras';
@@ -29,6 +30,7 @@ interface ComprasViewProps {
   despensa?: ItemDespensa[];
   fechaLunesActual?: string;
   onActualizarItems: () => void;
+  onAbrirChatbot?: (ingrediente?: string) => void;
 }
 
 /**
@@ -40,40 +42,102 @@ export function calcularUnidadesYSubtotal(item: ItemCompra) {
   const prod = item.productoSeleccionado;
   const precioUnitario = item.productoManual?.precio ?? prod?.precio ?? 0;
 
+  // 1. Extraer peso o volumen del envase
   let gramosEnvase = 0;
-  if (prod?.cantidadPresentacion) {
-    const gMatch = prod.cantidadPresentacion.match(/(\d+)\s*g/i);
-    const kgMatch = prod.cantidadPresentacion.match(/(\d+(?:[.,]\d+)?)\s*kg/i);
-    const lMatch = prod.cantidadPresentacion.match(/(\d+(?:[.,]\d+)?)\s*l/i);
-    if (gMatch?.[1]) gramosEnvase = parseInt(gMatch[1], 10);
-    else if (kgMatch?.[1]) gramosEnvase = Math.round(parseFloat(kgMatch[1].replace(',', '.')) * 1000);
-    else if (lMatch?.[1]) gramosEnvase = Math.round(parseFloat(lMatch[1].replace(',', '.')) * 1000);
-  }
+  const textoParaBuscar = `${prod?.cantidadPresentacion ?? ''} ${prod?.nombre ?? ''}`;
+  const gMatch = textoParaBuscar.match(/(\d+)\s*(?:g|gr)\b/i);
+  const kgMatch = textoParaBuscar.match(/(\d+(?:[.,]\d+)?)\s*kg\b/i);
+  const lMatch = textoParaBuscar.match(/(\d+(?:[.,]\d+)?)\s*l\b/i);
+  const mlMatch = textoParaBuscar.match(/(\d+)\s*ml\b/i);
+
+  if (gMatch?.[1]) gramosEnvase = parseInt(gMatch[1], 10);
+  else if (mlMatch?.[1]) gramosEnvase = parseInt(mlMatch[1], 10);
+  else if (kgMatch?.[1]) gramosEnvase = Math.round(parseFloat(kgMatch[1].replace(',', '.')) * 1000);
+  else if (lMatch?.[1]) gramosEnvase = Math.round(parseFloat(lMatch[1].replace(',', '.')) * 1000);
 
   let unidades = 1;
-  if (gramosEnvase > 0) {
-    const gramosNecesarios =
-      item.unidad === 'kg' || item.unidad === 'l'
-        ? item.cantidadAComprar * 1000
-        : item.cantidadAComprar;
-    unidades = Math.max(1, Math.ceil(gramosNecesarios / gramosEnvase));
-  } else if (item.unidad === 'unidad') {
-    const unidadesPack = prod?.nombre.match(/(\d+)\s*Un/i);
-    if (unidadesPack?.[1]) {
-      const uEnPack = parseInt(unidadesPack[1], 10);
-      unidades = Math.max(1, Math.ceil(item.cantidadAComprar / uEnPack));
+  let subtotal = 0;
+  let textoPresentacion = '';
+
+  const esGranelPorKilo =
+    prod?.nombre.toLowerCase().includes('granel') ||
+    prod?.precioPorUnidadMedida?.toLowerCase().includes('kg');
+
+  if (item.unidad === 'kg' || item.unidad === 'l') {
+    const gramosNecesarios = item.cantidadAComprar * 1000;
+    if (gramosEnvase > 0) {
+      unidades = Math.max(1, Math.ceil(gramosNecesarios / gramosEnvase));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${unidades === 1 ? 'pack' : 'packs'} (${prod?.cantidadPresentacion || `${gramosEnvase}g`})`;
+    } else if (esGranelPorKilo) {
+      subtotal = Math.round(item.cantidadAComprar * precioUnitario);
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar));
+      textoPresentacion = `~${item.cantidadAComprar.toFixed(1)} kg granel`;
     } else {
       unidades = Math.max(1, Math.ceil(item.cantidadAComprar));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${item.unidad}`;
+    }
+  } else if (item.unidad === 'g' || item.unidad === 'ml') {
+    if (gramosEnvase > 0) {
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar / gramosEnvase));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${unidades === 1 ? 'pack' : 'packs'} (${prod?.cantidadPresentacion || `${gramosEnvase}g`})`;
+    } else if (esGranelPorKilo) {
+      const kilos = item.cantidadAComprar / 1000;
+      subtotal = Math.round(kilos * precioUnitario);
+      unidades = Math.max(1, Math.ceil(kilos));
+      textoPresentacion = `${Math.round(item.cantidadAComprar)} g granel`;
+    } else {
+      const tamanoEstimado = item.cantidadAComprar > 500 ? 500 : 250;
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar / tamanoEstimado));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${unidades === 1 ? 'unidad' : 'unidades'}`;
+    }
+  } else if (item.unidad === 'unidad') {
+    const nombreNorm = item.ingredienteNombre.toLowerCase();
+    const unidadesPack = prod?.nombre.match(/(\d+)\s*Un\b/i);
+
+    if (nombreNorm.includes('pan de molde') || nombreNorm.includes('pan molde')) {
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar / 20));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${unidades === 1 ? 'bolsa' : 'bolsas'} (${Math.round(item.cantidadAComprar)} rebanadas)`;
+    } else if (nombreNorm.includes('galleta')) {
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar / 30));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${unidades === 1 ? 'paquete' : 'paquetes'} (${Math.round(item.cantidadAComprar)} galletas)`;
+    } else if (nombreNorm.includes('tortilla')) {
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar / 8));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${unidades === 1 ? 'paquete' : 'paquetes'} (${Math.round(item.cantidadAComprar)} tortillas)`;
+    } else if (unidadesPack?.[1]) {
+      const uEnPack = parseInt(unidadesPack[1], 10);
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar / uEnPack));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${unidades === 1 ? 'pack' : 'packs'} (${uEnPack} un c/u)`;
+    } else if (esGranelPorKilo) {
+      let gramosPorUnidad = 150;
+      if (nombreNorm.includes('plátano') || nombreNorm.includes('platano')) gramosPorUnidad = 160;
+      else if (nombreNorm.includes('tomate')) gramosPorUnidad = 150;
+      else if (nombreNorm.includes('manzana')) gramosPorUnidad = 180;
+      else if (nombreNorm.includes('limón') || nombreNorm.includes('limon')) gramosPorUnidad = 100;
+      else if (nombreNorm.includes('cebolla')) gramosPorUnidad = 180;
+      else if (nombreNorm.includes('palta')) gramosPorUnidad = 180;
+
+      const kilosTotal = (item.cantidadAComprar * gramosPorUnidad) / 1000;
+      subtotal = Math.round(kilosTotal * precioUnitario);
+      unidades = Math.max(1, Math.ceil(kilosTotal));
+      textoPresentacion = `~${kilosTotal.toFixed(1)} kg (${Math.round(item.cantidadAComprar)} un)`;
+    } else {
+      unidades = Math.max(1, Math.ceil(item.cantidadAComprar));
+      subtotal = unidades * precioUnitario;
+      textoPresentacion = `${unidades} ${unidades === 1 ? 'unidad' : 'unidades'}`;
     }
   } else {
     unidades = Math.max(1, Math.ceil(item.cantidadAComprar));
+    subtotal = unidades * precioUnitario;
+    textoPresentacion = `${unidades} ${item.unidad}`;
   }
-
-  const subtotal = unidades * precioUnitario;
-  const textoPresentacion =
-    prod?.cantidadPresentacion && prod.cantidadPresentacion !== '1 un'
-      ? `${unidades} ${unidades === 1 ? 'pack' : 'packs'} (${prod.cantidadPresentacion})`
-      : `${unidades} ${unidades === 1 ? 'unidad' : 'unidades'}`;
 
   return { unidades, subtotal, textoPresentacion };
 }
@@ -85,6 +149,7 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
   despensa,
   fechaLunesActual,
   onActualizarItems,
+  onAbrirChatbot,
 }) => {
   const [periodo, setPeriodo] = useState<'mes' | 'semana'>('mes');
   const [modoTienda, setModoTienda] = useState<boolean>(false);
@@ -153,6 +218,23 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
       console.error('Error al sincronizar precios Líder:', err);
     } finally {
       setSincronizando(false);
+    }
+  };
+
+  // Limpiar y regenerar lista desde cero con productos reales verificados y sin condimentos duplicados
+  const [regenerando, setRegenerando] = useState<boolean>(false);
+  const handleRegenerarListaLimpia = async () => {
+    if (!planesSemana || !recetas || !despensa || !fechaLunesActual) return;
+    setRegenerando(true);
+    try {
+      const nuevaLista = generarListaCompras(planesSemana, recetas, despensa, fechaLunesActual);
+      await db.compras.clear();
+      await db.compras.bulkPut(nuevaLista);
+      onActualizarItems();
+    } catch (err) {
+      console.error('Error al regenerar lista limpia:', err);
+    } finally {
+      setRegenerando(false);
     }
   };
 
@@ -252,6 +334,13 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
                 {periodo === 'mes' ? 'total estimado del mes' : 'total estimado semanal'}
               </span>
             </div>
+            {totalEstimado <= 100000 && (
+              <div className="mt-1">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  ✓ Presupuesto mensual optimizado (Bajo $100.000 CLP)
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -265,6 +354,16 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
             >
               <Eye className="w-4 h-4" />
               <span>{modoTienda ? 'Modo Normal' : 'Modo Tienda'}</span>
+            </button>
+
+            <button
+              onClick={handleRegenerarListaLimpia}
+              disabled={regenerando}
+              title="Limpiar y regenerar lista con productos reales de Líder, porciones exactas y sin condimentos duplicados"
+              className="px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--accent-protein)] border border-[var(--border-subtle)] transition-all cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${regenerando ? 'animate-spin text-[var(--accent-protein)]' : ''}`} />
+              <span className="hidden sm:inline">Limpiar &amp; Recalcular</span>
             </button>
 
             <button
@@ -286,6 +385,118 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
               width: `${itemsMostrados.length > 0 ? (conteoComprados / itemsMostrados.length) * 100 : 0}%`,
             }}
           />
+        </div>
+      </div>
+
+      {/* Recuadro de Sugerencias en caso de no haber stock & Escáner IA */}
+      <div className="p-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] shadow-xs space-y-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[var(--accent-protein)]/15 text-[var(--accent-protein)] flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 fill-current" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[var(--text-primary)] leading-tight">
+                ¿No encuentras un producto en Líder Casona?
+              </h3>
+              <p className="text-xs text-[var(--text-muted)]">
+                Guía de reemplazos rápidos y escáner IA de tablas nutricionales en la góndola
+              </p>
+            </div>
+          </div>
+
+          {onAbrirChatbot && (
+            <button
+              onClick={() => onAbrirChatbot()}
+              className="px-3 py-1.5 rounded-xl bg-[var(--accent-protein)] text-black font-extrabold text-xs flex items-center gap-1.5 hover:opacity-90 active:scale-95 transition-all cursor-pointer shadow-xs shrink-0"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>Escanear Tabla IA</span>
+            </button>
+          )}
+        </div>
+
+        {/* Mini tarjetas de sustitución directa para alimentos proteicos clave */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-2.5 border-t border-[var(--border-subtle)]">
+          <div className="p-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-start gap-2">
+            <span className="text-base select-none shrink-0">🍗</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[var(--text-primary)]">Sin Pechuga de Pollo</span>
+                {onAbrirChatbot && (
+                  <button
+                    onClick={() => onAbrirChatbot('pechuga de pollo')}
+                    className="text-[10px] font-bold text-[var(--accent-protein)] hover:underline cursor-pointer"
+                  >
+                    Escanear
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 leading-snug">
+                Llevar <strong>Pavo Sopraval en filete</strong>, <strong>Pollo entero con hueso</strong> (rinde el doble y es más económico) o <strong>Lomo centro cerdo magro</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-start gap-2">
+            <span className="text-base select-none shrink-0">🥩</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[var(--text-primary)]">Sin Posta Negra</span>
+                {onAbrirChatbot && (
+                  <button
+                    onClick={() => onAbrirChatbot('posta negra de vacuno')}
+                    className="text-[10px] font-bold text-[var(--accent-protein)] hover:underline cursor-pointer"
+                  >
+                    Escanear
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 leading-snug">
+                Llevar <strong>Carne molida tártaro 4% grasa</strong>, <strong>Posta rosada</strong> o <strong>Asiento de vacuno</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-start gap-2">
+            <span className="text-base select-none shrink-0">🐟</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[var(--text-primary)]">Sin Atún al Agua</span>
+                {onAbrirChatbot && (
+                  <button
+                    onClick={() => onAbrirChatbot('atun al agua')}
+                    className="text-[10px] font-bold text-[var(--accent-protein)] hover:underline cursor-pointer"
+                  >
+                    Escanear
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 leading-snug">
+                Llevar <strong>Jurel San José al agua</strong> (alto en Omega-3 y económico) o <strong>Filete de merluza austral</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] flex items-start gap-2">
+            <span className="text-base select-none shrink-0">🧀</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[var(--text-primary)]">Sin Quesillo</span>
+                {onAbrirChatbot && (
+                  <button
+                    onClick={() => onAbrirChatbot('quesillo')}
+                    className="text-[10px] font-bold text-[var(--accent-protein)] hover:underline cursor-pointer"
+                  >
+                    Escanear
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 leading-snug">
+                Llevar <strong>Queso fresco light Colun</strong>, <strong>Ricotta descremada</strong> o sumar <strong>huevos duros</strong>.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -416,6 +627,16 @@ export const ComprasView: React.FC<ComprasViewProps> = ({
                               <span>Ver Líder</span>
                               <ExternalLink className="w-2.5 h-2.5" />
                             </a>
+                          )}
+                          {onAbrirChatbot && (
+                            <button
+                              onClick={() => onAbrirChatbot(item.ingredienteNombre)}
+                              className="text-[var(--text-muted)] hover:text-[var(--accent-protein)] inline-flex items-center gap-1 text-[11px] transition-colors cursor-pointer"
+                              title="Escanear tabla nutricional de una alternativa en la góndola"
+                            >
+                              <Camera className="w-2.5 h-2.5" />
+                              <span>¿No hay? Escanear</span>
+                            </button>
                           )}
                         </div>
                       </div>

@@ -13,9 +13,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onCompletado }
   const [edad, setEdad] = useState<number>(21);
   const [alturaCm, setAlturaCm] = useState<number>(191);
   const [pesoKg, setPesoKg] = useState<number>(137);
+  const [pesoReferencia, setPesoReferencia] = useState<number>(95);
   const [diasGym, setDiasGym] = useState<number>(4);
   const [objetivo, setObjetivo] = useState<ObjetivoNutricional>('recomposicion');
   const [gramosProteina, setGramosProteina] = useState<number>(1.6);
+  const [usaProteinaEnPolvo, setUsaProteinaEnPolvo] = useState<boolean>(true);
   const [guardando, setGuardando] = useState<boolean>(false);
 
   // Exclusiones de alimentos ambiguos (por defecto en false = excluidos de la dieta)
@@ -37,12 +39,15 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onCompletado }
     sexo: 'hombre',
     alturaCm,
     pesoActualKg: pesoKg,
+    pesoReferenciaKg: pesoReferencia,
     diasGymSemana: diasGym,
     duracionEntrenoHoras: 2,
     factorActividad,
     objetivo,
     gramosProteinaPorKg: gramosProteina,
     deficitsKcal: -250,
+    usaProteinaEnPolvo,
+    scoopsProteinaDia: usaProteinaEnPolvo ? 1 : 0,
     exclusionesAmbiguas: exclusiones,
     sucursalLiderPreferida: 'Líder Casona, Osorno',
     cupoMensualCocaColaZero: 8,
@@ -176,13 +181,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onCompletado }
           </div>
 
           {/* Proteína por kg */}
-          <div>
+          {/* Proteína por kg sobre peso atlético de referencia */}
+          <div className="space-y-2">
             <div className="flex justify-between items-center mb-1">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">
-                Proteína diaria (g/kg de peso)
+                Proteína diaria (g/kg de referencia atlética)
               </label>
               <span className="text-xs font-bold text-[var(--accent-protein)] tabular-nums">
-                {gramosProteina} g/kg ({Math.round(pesoKg * gramosProteina)}g netos)
+                {gramosProteina} g/kg ({metas.proteinasGramos}g netos / día)
               </span>
             </div>
             <input
@@ -194,6 +200,33 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onCompletado }
               onChange={(e) => setGramosProteina(Number(e.target.value))}
               className="w-full accent-[var(--accent-protein)] cursor-pointer"
             />
+            <div className="flex items-center justify-between text-xs pt-1">
+              <span className="text-[11px] text-[var(--text-muted)]">Peso atlético de referencia (kg):</span>
+              <input
+                type="number"
+                min="70"
+                max="120"
+                value={pesoReferencia}
+                onChange={(e) => setPesoReferencia(Number(e.target.value))}
+                className="w-16 px-2 py-0.5 text-xs text-right rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] font-bold"
+              />
+            </div>
+            <p className="text-[11px] text-[var(--text-muted)]">
+              💡 Calculado sobre <strong>{pesoReferencia} kg</strong> (peso atlético de referencia para 191 cm). Evita cantidades desmedidas de carne (+10 kg) y mantiene tu compra mensual bajo $100.000 CLP.
+            </p>
+
+            {/* Checkbox Proteína en Polvo (Whey) */}
+            <label className="flex items-center gap-2.5 pt-1 text-xs text-[var(--text-secondary)] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={usaProteinaEnPolvo}
+                onChange={(e) => setUsaProteinaEnPolvo(e.target.checked)}
+                className="w-4 h-4 rounded border-[var(--border-subtle)] text-[var(--accent-protein)]"
+              />
+              <span>
+                Cuento con proteína en polvo (Whey Protein) para 1 batido/día (~25g prote)
+              </span>
+            </label>
           </div>
 
           {/* Tarjeta de Resumen en Tiempo Real de Fórmulas */}
@@ -226,6 +259,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onCompletado }
                 <span className="text-xl font-bold text-[var(--accent-protein)] tabular-nums">
                   {metas.proteinasGramos} g/día
                 </span>
+                {usaProteinaEnPolvo && (
+                  <span className="block text-[10px] text-[var(--text-muted)]">
+                    ({metas.proteinaSolidaGramos}g comida + {metas.proteinaWheyGramos}g whey)
+                  </span>
+                )}
               </div>
             </div>
           </div>

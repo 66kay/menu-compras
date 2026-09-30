@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dumbbell, Moon, Sun, ShieldCheck } from 'lucide-react';
+import { Dumbbell, Moon, Sun, ShieldCheck, Sparkles } from 'lucide-react';
 import type { PerfilUsuario } from '../../types';
 
 interface HeaderProps {
@@ -9,6 +9,7 @@ interface HeaderProps {
   caloriasMeta?: number;
   proteinaConsumida?: number;
   proteinaMeta?: number;
+  onAbrirChatbot?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   caloriasMeta = 0,
   proteinaConsumida = 0,
   proteinaMeta = 0,
+  onAbrirChatbot,
 }) => {
   const [esOscuro, setEsOscuro] = React.useState(true);
 
@@ -79,6 +81,17 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
             </div>
+          )}
+
+          {onAbrirChatbot && (
+            <button
+              onClick={onAbrirChatbot}
+              title="Escáner IA: Lee la tabla nutricional de cualquier producto en el pasillo de Líder"
+              className="px-2.5 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--accent-protein)] hover:bg-[var(--accent-protein)] hover:text-black flex items-center gap-1.5 text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-current" />
+              <span className="hidden sm:inline">Escáner IA</span>
+            </button>
           )}
 
           <div

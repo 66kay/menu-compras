@@ -25,10 +25,12 @@ function normalizarNombreIngrediente(nombre: string): string {
   if (n.includes('pechuga de pollo') || n.includes('pechuga pollo')) return 'Pechuga de pollo deshuesada';
   if (n.includes('posta negra') || n.includes('tártaro') || n.includes('carne molida')) return 'Posta negra de vacuno';
   if (n.includes('salmón') || n.includes('salmon')) return 'Filete de salmón';
-  if (n.includes('claras de huevo') || n.includes('clara')) return 'Claras de huevo';
-  if (n.includes('huevo')) return 'Huevos de gallina';
+  if (n.includes('merluza')) return 'Filete de merluza austral';
+  if (n.includes('claras de huevo') || n.includes('clara') || n.includes('huevo')) return 'Huevos de gallina';
   if (n.includes('marraqueta')) return 'Marraqueta fresca';
   if (n.includes('hallulla')) return 'Hallulla integral';
+  if (n.includes('pan de molde') || n.includes('pan molde')) return 'Pan de molde integral';
+  if (n.includes('galleta')) return 'Galletas de agua integrales';
   if (n.includes('palta')) return 'Palta Hass';
   if (n.includes('avena')) return 'Avena instantánea tradicional';
   if (n.includes('leche') && n.includes('protein')) return 'Leche descremada con proteína (Protein+)';
@@ -40,11 +42,17 @@ function normalizarNombreIngrediente(nombre: string): string {
   if (n.includes('arroz')) return 'Arroz blanco grado 1';
   if (n.includes('papas') || n.includes('papa')) return 'Papas granel';
   if (n.includes('zapallo camote')) return 'Zapallo camote';
+  if (n.includes('zapallito')) return 'Zapallito italiano';
+  if (n.includes('espinaca')) return 'Espinacas baby o frescas';
+  if (n.includes('champiñon') || n.includes('champinon')) return 'Champiñones laminados';
+  if (n.includes('fideo') || n.includes('spaghetti') || n.includes('tallarin')) return 'Fideos spaghetti o tallarines';
+  if (n.includes('tortilla')) return 'Tortillas de trigo integrales (rapiditas)';
   if (n.includes('tomate')) return 'Tomate chileno';
   if (n.includes('cebolla')) return 'Cebolla granel';
   if (n.includes('plátano') || n.includes('platano')) return 'Plátano maduro';
-  if (n.includes('aceite de oliva')) return 'Aceite de oliva virgen extra';
+  if (n.includes('aceite')) return 'Aceite de oliva o vegetal';
   if (n.includes('atún') || n.includes('atun')) return 'Lomitos de atún al agua';
+  if (n.includes('proteína en polvo') || n.includes('whey')) return 'Suplemento de proteína Whey chocolate tarro';
   return nombre.trim();
 }
 
@@ -109,6 +117,34 @@ function desdeUnidadBase(cantidadBase: number, tipo: 'peso' | 'volumen' | 'unida
   };
 }
 
+function esCondimentoODespensaPermanente(nombre: string, unidad: string, opcional?: boolean): boolean {
+  if (opcional || unidad === 'pizca') return true;
+  const n = nombre.toLowerCase().trim();
+  const palabrasCondimento = [
+    'sal',
+    'pimienta',
+    'orégano',
+    'oregano',
+    'comino',
+    'ajo en polvo',
+    'canela',
+    'ciboulette',
+    'aliño',
+    'condimento',
+    'hierbas',
+    'laurel',
+    'curry',
+    'páprika',
+    'paprika',
+    'nuez moscada',
+    'clavo de olor',
+    'polvos de hornear',
+    'bicarbonato',
+    'esencia de vainilla',
+  ];
+  return palabrasCondimento.some((c) => n.includes(c));
+}
+
 /**
  * Genera y consolida la lista de compras para una semana del planificador,
  * restando las existencias de la despensa y agrupando por pasillo de supermercado.
@@ -140,8 +176,8 @@ export function generarListaCompras(
       const factorPorciones = comida.porciones / receta.porciones;
 
       for (const ing of receta.ingredientes) {
-        if (ing.opcional && (ing.nombre.toLowerCase().includes('pizca') || ing.nombre.toLowerCase().includes('pimienta'))) {
-          // Ignorar condimentos menores de pizca en la lista para no saturar la compra
+        // Ignorar condimentos básicos de despensa (sal, pimienta, orégano, comino, ajo en polvo, etc.) y pizcas
+        if (esCondimentoODespensaPermanente(ing.nombre, ing.unidad, ing.opcional)) {
           continue;
         }
 
@@ -176,14 +212,44 @@ export function generarListaCompras(
   const itemsCompra: ItemCompra[] = [];
 
   for (const [nombre, acum] of acumulados.entries()) {
-    const enDespensaBase = mapaDespensa.get(nombre) ?? 0;
+    let enDespensaBase = mapaDespensa.get(nombre) ?? 0;
+
+    // Si es proteína en polvo (Whey), el usuario ya cuenta con su tarro en casa
+    if (nombre.includes('proteína Whey') || nombre.includes('proteina Whey') || nombre.includes('Whey')) {
+      enDespensaBase = Math.max(enDespensaBase, acum.cantidadBase);
+    }
+
     const aComprarBase = Math.max(0, acum.cantidadBase - enDespensaBase);
+
+    // Si ya lo tiene 100% en despensa (como su proteína Whey), no requiere comprarlo en el súper
+    if (aComprarBase <= 0) {
+      continue;
+    }
 
     const necesaria = desdeUnidadBase(acum.cantidadBase, acum.tipoUnidad);
     const despensaVisible = desdeUnidadBase(enDespensaBase, acum.tipoUnidad);
     const comprarVisible = desdeUnidadBase(aComprarBase, acum.tipoUnidad);
 
-    const productoLider = obtenerMejorOpcionBase(acum.terminoBusquedaLider || nombre);
+    const productoLider = obtenerMejorOpcionBase(
+      acum.terminoBusquedaLider || nombre,
+      acum.categoriaPasillo
+    );
+
+    // 4. Deduplicación estricta por producto de Líder:
+    // Si dos ingredientes distintos apuntan al mismo SKU o producto en Líder,
+    // se fusionan en un único ítem con cantidades sumadas para evitar duplicados visuales en la góndola.
+    if (productoLider) {
+      const yaExiste = itemsCompra.find(
+        (i) =>
+          i.productoSeleccionado?.id === productoLider.id ||
+          (productoLider.sku && i.productoSeleccionado?.sku === productoLider.sku)
+      );
+      if (yaExiste) {
+        yaExiste.cantidadNecesaria += necesaria.cantidad;
+        yaExiste.cantidadAComprar += comprarVisible.cantidad;
+        continue;
+      }
+    }
 
     itemsCompra.push({
       id: `compra_${fechaSemana}_${nombre.replace(/\s+/g, '_').toLowerCase()}`,

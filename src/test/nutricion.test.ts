@@ -24,12 +24,15 @@ describe('Cálculos Nutricionales y Fórmulas', () => {
       sexo: 'hombre',
       alturaCm: 191,
       pesoActualKg: 137,
+    pesoReferenciaKg: 95,
       diasGymSemana: 4,
       duracionEntrenoHoras: 2,
       factorActividad: 1.2, // Muy bajo
       objetivo: 'bajar_grasa',
       gramosProteinaPorKg: 1.6,
       deficitsKcal: -1000, // Déficit agresivo forzado
+      usaProteinaEnPolvo: true,
+      scoopsProteinaDia: 1,
       exclusionesAmbiguas: {
         arvejasVerdes: false,
         porotosVerdes: false,
@@ -54,12 +57,15 @@ describe('Cálculos Nutricionales y Fórmulas', () => {
       sexo: 'hombre',
       alturaCm: 191,
       pesoActualKg: 137,
+      pesoReferenciaKg: 95,
       diasGymSemana: 4,
       duracionEntrenoHoras: 2,
       factorActividad: 1.55,
       objetivo: 'recomposicion',
       gramosProteinaPorKg: 1.6,
       deficitsKcal: -250,
+      usaProteinaEnPolvo: true,
+      scoopsProteinaDia: 1,
       exclusionesAmbiguas: {
         arvejasVerdes: false,
         porotosVerdes: false,
@@ -80,5 +86,43 @@ describe('Cálculos Nutricionales y Fórmulas', () => {
     expect(metaGym.carbohidratos).toBeGreaterThan(metaDescanso.carbohidratos);
     // La proteína se mantiene constante para soporte muscular
     expect(metaGym.proteinas).toBe(metaDescanso.proteinas);
+  });
+
+  it('calcula la proteína sobre el peso atlético de referencia (95kg) evitando cantidades irreales de carne', () => {
+    const perfil137kg: PerfilUsuario = {
+      id: 'usuario_principal',
+      edad: 21,
+      sexo: 'hombre',
+      alturaCm: 191,
+      pesoActualKg: 137,
+      pesoReferenciaKg: 95,
+      diasGymSemana: 4,
+      duracionEntrenoHoras: 2,
+      factorActividad: 1.55,
+      objetivo: 'recomposicion',
+      gramosProteinaPorKg: 1.6,
+      deficitsKcal: -250,
+      usaProteinaEnPolvo: true,
+      scoopsProteinaDia: 1,
+      exclusionesAmbiguas: {
+        arvejasVerdes: false,
+        porotosVerdes: false,
+        mani: false,
+        soyaTofu: false,
+      },
+      sucursalLiderPreferida: 'Líder Casona, Osorno',
+      cupoMensualCocaColaZero: 8,
+      cupoMensualAntojos: 4,
+      creadoEn: new Date().toISOString(),
+      actualizadoEn: new Date().toISOString(),
+    };
+
+    const metas = calcularMetasBase(perfil137kg);
+    // 95 kg * 1.6 g/kg = 152 g/día (en vez de 137 * 1.6 = 219 g)
+    expect(metas.proteinasGramos).toBe(152);
+    expect(metas.pesoBaseCalculo).toBe(95);
+    // 1 scoop de whey = 25g de proteína, el resto (~127g) de comida sólida
+    expect(metas.proteinaWheyGramos).toBe(25);
+    expect(metas.proteinaSolidaGramos).toBe(127);
   });
 });

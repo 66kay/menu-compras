@@ -42,14 +42,42 @@ export const db = new MenuComprasDB();
  */
 export async function inicializarBaseDatos(): Promise<void> {
   try {
-    const RECETAS_VERSION = 'v3-express-no-blender-clean';
+    const RECETAS_VERSION = 'v5-no-duplicates-real-lider-products';
     const versionGuardada = localStorage.getItem('menu_recetas_version');
     const conteoRecetas = await db.recetas.count();
 
     if (conteoRecetas === 0 || versionGuardada !== RECETAS_VERSION) {
       // bulkPut inserta o actualiza las semillas por su ID único sin tocar recetas personalizadas del usuario
       await db.recetas.bulkPut(SEMILLAS_RECETAS);
+      // Limpiar planes y lista de compras previas para regenerar con porciones limpias y productos reales de Líder
+      await db.plan.clear();
+      await db.compras.clear();
+
+      // Sembrar proteína Whey en despensa si no existe (el usuario ya cuenta con su propio tarro)
+      const despExistente = await db.despensa.toArray();
+      if (!despExistente.some((d) => d.nombre.toLowerCase().includes('whey') || d.nombre.toLowerCase().includes('proteína en polvo'))) {
+        await db.despensa.put({
+          id: 'desp-whey-proteina-usuario',
+          nombre: 'Suplemento de proteína Whey chocolate tarro',
+          cantidad: 1000,
+          unidad: 'g',
+          categoriaPasillo: 'despensa_abarrotes',
+          actualizadoEn: new Date().toISOString(),
+        });
+      }
+
       localStorage.setItem('menu_recetas_version', RECETAS_VERSION);
+    }
+
+    // Migrar perfil existente si le faltan los campos de peso atlético de referencia o proteína en polvo
+    const p = await db.perfil.get('usuario_principal');
+    if (p && (!p.pesoReferenciaKg || p.usaProteinaEnPolvo === undefined)) {
+      await db.perfil.put({
+        ...p,
+        pesoReferenciaKg: p.pesoReferenciaKg ?? 95,
+        usaProteinaEnPolvo: p.usaProteinaEnPolvo ?? true,
+        scoopsProteinaDia: p.scoopsProteinaDia ?? 1,
+      });
     }
   } catch (error) {
     console.error('Error al inicializar la base de datos IndexedDB:', error);

@@ -150,7 +150,14 @@ describe('Consolidación de Lista de Compras y Descuento de Despensa', () => {
       gastoSemanal += calc.subtotal;
     }
     console.log('GASTO SEMANAL ESTIMADO (7 DÍAS CON WHEY EN DESPENSA):', gastoSemanal);
-    // Un carro semanal de 7 días de carnes magras, huevos y frescos se mantiene bajo $90.000 CLP
+
+    let gastoMensualTotal = 0;
+    for (const item of listaMes) {
+      const calc = calcularUnidadesYSubtotal(item);
+      gastoMensualTotal += calc.subtotal;
+    }
+    console.log('GASTO MENSUAL TOTAL (28 DÍAS CON WHEY EN DESPENSA):', gastoMensualTotal);
+    expect(gastoMensualTotal).toBeLessThan(140000);
     expect(gastoSemanal).toBeLessThan(90000);
 
     // Verificación estricta de CERO duplicados y CERO condimentos en la lista

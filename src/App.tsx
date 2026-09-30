@@ -101,7 +101,8 @@ export const App: React.FC = () => {
           c.ingredienteNombre.toLowerCase().includes('pimienta') ||
           c.ingredienteNombre.toLowerCase().includes('orégano') ||
           c.ingredienteNombre.toLowerCase().includes('oregano') ||
-          (c.ingredienteNombre.toLowerCase().includes('pollo') && c.cantidadNecesaria > 5)
+          (c.ingredienteNombre.toLowerCase().includes('pollo') && c.cantidadNecesaria > 5) ||
+          c.ingredienteNombre.toLowerCase().includes('leche descremada natural')
       );
 
       if ((compras.length === 0 || compras.length < 15 || tieneItemsObsoletos) && planes.length > 0 && r.length > 0) {

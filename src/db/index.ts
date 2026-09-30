@@ -42,7 +42,7 @@ export const db = new MenuComprasDB();
  */
 export async function inicializarBaseDatos(): Promise<void> {
   try {
-    const RECETAS_VERSION = 'v6-budget-130k-granola-mix-ensalada';
+    const RECETAS_VERSION = 'v7-protein-milk-jamon-pierna';
     const versionGuardada = localStorage.getItem('menu_recetas_version');
     const conteoRecetas = await db.recetas.count();
 

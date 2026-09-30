@@ -59,6 +59,32 @@ export const CATALOGO_LIDER_BASE: Producto[] = [
     }
   },
   {
+    "id": "lid-00780191603099",
+    "sku": "00780191603099",
+    "nombre": "Jamón Pierna Tradicional Envasado, 200 g",
+    "marca": "La Preferida",
+    "precio": 2550,
+    "precioReferencial": false,
+    "urlFoto": "https://i5.walmartimages.cl/asr/92a4726e-4739-4467-88f5-f9339e80a068.74d81f13bceeeea0ca8c0fcf9ae2c140.jpeg",
+    "urlProducto": "https://super.lider.cl/ip/fiambres-y-embutidos/00780191603099",
+    "categoriaPasillo": "carnes_aves",
+    "fechaActualizacion": "2026-09-29T23:30:00.000Z",
+    "vendedorTipo": "directo_lider",
+    "puntajeNutricional": 92,
+    "sellosNegros": 0,
+    "cantidadPresentacion": "200 g",
+    "precioPorUnidadMedida": "$12.750 x kg",
+    "disponibleEnCasona": true,
+    "terminoBusqueda": "jamon pierna tradicional la preferida artesanal",
+    "macros100g": {
+      "calorias": 105,
+      "proteinas": 19,
+      "carbohidratos": 1.5,
+      "grasas": 2.5,
+      "fibra": 0
+    }
+  },
+  {
     "id": "lid-00780467391411",
     "sku": "00780467391411",
     "nombre": "Suplemento de proteína Whey chocolate tarro, 653 g",
@@ -878,7 +904,7 @@ export const CATALOGO_LIDER_BASE: Producto[] = [
     "vendedorTipo": "directo_lider",
     "puntajeNutricional": 88,
     "sellosNegros": 0,
-    "cantidadPresentacion": "1000 g",
+    "cantidadPresentacion": "1000 ml",
     "precioPorUnidadMedida": "$2.290 x lt",
     "disponibleEnCasona": true,
     "terminoBusqueda": "leche protein colun",
@@ -5280,13 +5306,23 @@ export function obtenerMejorOpcionBase(
     const teProd = candidatos.find((p) => p.sku === '00780182500010' || p.nombre.toLowerCase().includes('té') || p.nombre.toLowerCase().includes('te '));
     if (teProd) return teProd;
   }
-  if (norm.includes('leche') && norm.includes('protein')) {
+  if (
+    norm.includes('jamon pierna') ||
+    norm.includes('jamón pierna') ||
+    norm.includes('jamon tradicional') ||
+    norm.includes('jamón tradicional') ||
+    (norm.includes('pierna') && norm.includes('jam'))
+  ) {
+    const jamonPierna = candidatos.find(
+      (p) => p.sku === '00780191603099' || (p.nombre.toLowerCase().includes('pierna') && p.nombre.toLowerCase().includes('jam'))
+    );
+    if (jamonPierna) return jamonPierna;
+  }
+  if (norm.includes('leche')) {
     const lecheProt1L = candidatos.find(
       (p) => p.sku === '00780292001218' || (p.nombre.toLowerCase().includes('protein') && p.nombre.toLowerCase().includes('1000 ml'))
     );
     if (lecheProt1L) return lecheProt1L;
-  }
-  if (norm.includes('leche') && !norm.includes('protein')) {
     const leche1L = candidatos.find(
       (p) => (p.sku === '00780292000008' || p.cantidadPresentacion === '1 L' || p.nombre.includes('1 L') || p.nombre.includes('1 l')) && p.categoriaPasillo === 'lacteos_huevos'
     );

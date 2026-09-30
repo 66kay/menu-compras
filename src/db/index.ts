@@ -42,7 +42,7 @@ export const db = new MenuComprasDB();
  */
 export async function inicializarBaseDatos(): Promise<void> {
   try {
-    const RECETAS_VERSION = 'v7-protein-milk-jamon-pierna';
+    const RECETAS_VERSION = 'v8-modal-ingredientes-2800kcal';
     const versionGuardada = localStorage.getItem('menu_recetas_version');
     const conteoRecetas = await db.recetas.count();
 
@@ -69,11 +69,12 @@ export async function inicializarBaseDatos(): Promise<void> {
       localStorage.setItem('menu_recetas_version', RECETAS_VERSION);
     }
 
-    // Migrar perfil existente si le faltan los campos de peso atlético de referencia o proteína en polvo
+    // Migrar perfil existente asegurando las 2800 kcal exactas y peso atlético de referencia
     const p = await db.perfil.get('usuario_principal');
-    if (p && (!p.pesoReferenciaKg || p.usaProteinaEnPolvo === undefined)) {
+    if (p) {
       await db.perfil.put({
         ...p,
+        caloriasPersonalizadas: 2800,
         pesoReferenciaKg: p.pesoReferenciaKg ?? 95,
         usaProteinaEnPolvo: p.usaProteinaEnPolvo ?? true,
         scoopsProteinaDia: p.scoopsProteinaDia ?? 1,

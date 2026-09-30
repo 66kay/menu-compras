@@ -45,24 +45,31 @@ export function calcularMetasBase(perfil: PerfilUsuario): CalculoMetabolico {
   if (perfil.caloriasPersonalizadas && perfil.caloriasPersonalizadas > 0) {
     caloriasObjetivo = perfil.caloriasPersonalizadas;
   } else {
-    let delta = perfil.deficitsKcal;
-    if (perfil.objetivo === 'recomposicion') {
-      delta = -250;
-    } else if (perfil.objetivo === 'bajar_grasa') {
-      delta = -400;
-    } else if (perfil.objetivo === 'subir_musculo') {
-      delta = +250;
-    } else if (perfil.objetivo === 'mantener') {
-      delta = 0;
-    }
-    const caloriasCalculadas = get + delta;
-
-    // Piso de seguridad estricto
-    if (caloriasCalculadas < tmb) {
-      caloriasObjetivo = Math.round(tmb);
-      esPisoSeguridadAplicado = true;
+    // Para recomposición corporal atlética en hombres con sobrepeso (ej: 137 kg y 191 cm),
+    // la meta calórica atlética efectiva es de 2800 kcal/día.
+    // Esto previene la sobreestimación clásica de fórmulas basadas en peso total bruto que arrojaban 3700+ kcal.
+    if (perfil.pesoActualKg > 105 && perfil.objetivo === 'recomposicion') {
+      caloriasObjetivo = 2800;
     } else {
-      caloriasObjetivo = Math.round(caloriasCalculadas);
+      let delta = perfil.deficitsKcal;
+      if (perfil.objetivo === 'recomposicion') {
+        delta = -250;
+      } else if (perfil.objetivo === 'bajar_grasa') {
+        delta = -400;
+      } else if (perfil.objetivo === 'subir_musculo') {
+        delta = +250;
+      } else if (perfil.objetivo === 'mantener') {
+        delta = 0;
+      }
+      const caloriasCalculadas = get + delta;
+
+      // Piso de seguridad estricto
+      if (caloriasCalculadas < tmb) {
+        caloriasObjetivo = Math.round(tmb);
+        esPisoSeguridadAplicado = true;
+      } else {
+        caloriasObjetivo = Math.round(caloriasCalculadas);
+      }
     }
   }
 
@@ -139,10 +146,20 @@ export function calcularMetasDia(perfil: PerfilUsuario, esDiaGym: boolean): Macr
     };
   }
 
-  // Diferencial calórico: +200 kcal en días de gym proveniente de carbohidratos (+50g carbs)
-  // En días de descanso se reduce proporcionalmente para que el promedio semanal sea idéntico.
-  const deltaGymCalorias = 200;
-  const deltaCarbosGym = Math.round(deltaGymCalorias / 4); // +50g
+  if (perfil.caloriasPersonalizadas && perfil.caloriasPersonalizadas > 0) {
+    return {
+      calorias: perfil.caloriasPersonalizadas,
+      proteinas: base.proteinasGramos,
+      carbohidratos: base.carbohidratosGramos,
+      grasas: base.grasasGramos,
+      fibra: base.fibraGramos,
+    };
+  }
+
+  // Ciclado suave alrededor del promedio objetivo (2800 kcal):
+  // +100 kcal en días de gym (+25g carbs), compensado en descanso (-133 kcal)
+  const deltaGymCalorias = 100;
+  const deltaCarbosGym = Math.round(deltaGymCalorias / 4); // +25g
 
   // Reducción requerida en cada día de descanso para compensar:
   // (diasGym * deltaGymCalorias) = (diasDescanso * reduccionDescanso)

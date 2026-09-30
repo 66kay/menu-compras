@@ -17,6 +17,7 @@ import { ComprasView } from './components/compras/ComprasView';
 import { RecetasView } from './components/recetas/RecetasView';
 import { MetasView } from './components/metas/MetasView';
 import { ChatbotNutricionalModal } from './components/ia/ChatbotNutricionalModal';
+import { ModalDetalleReceta } from './components/recetas/ModalDetalleReceta';
 import { generarMes } from './logic/generador';
 import { generarListaCompras } from './logic/lista-compras';
 import { obtenerMejorOpcionBase } from './services/catalogo-lider-base';
@@ -312,6 +313,12 @@ export const App: React.FC = () => {
           setIngredienteChatbot(undefined);
         }}
         ingredienteInicial={ingredienteChatbot}
+      />
+
+      {/* Modal Global de Detalle de Receta, Ingredientes y Gramajes */}
+      <ModalDetalleReceta
+        receta={recetaDetalle}
+        onCerrar={() => setRecetaDetalle(null)}
       />
 
       {/* Barra de Navegación Fija (Móvil inferior + Desktop lateral) */}

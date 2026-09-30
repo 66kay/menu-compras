@@ -46,6 +46,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ onCompletado }
     objetivo,
     gramosProteinaPorKg: gramosProteina,
     deficitsKcal: -250,
+    caloriasPersonalizadas: 2800,
     usaProteinaEnPolvo,
     scoopsProteinaDia: usaProteinaEnPolvo ? 1 : 0,
     exclusionesAmbiguas: exclusiones,

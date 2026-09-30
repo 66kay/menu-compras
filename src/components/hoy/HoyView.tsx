@@ -7,6 +7,8 @@ import {
   Circle,
   Pin,
   RefreshCw,
+  ChefHat,
+  Eye,
 } from 'lucide-react';
 import type { PlanDia, ComidaPlanificada, Receta, PerfilUsuario, CategoriaComida } from '../../types';
 import { db } from '../../db';
@@ -361,27 +363,69 @@ export const HoyView: React.FC<HoyViewProps> = ({
                     )}
                   </div>
 
-                  <h4
+                  <div
                     onClick={() => recetaOriginal && onVerRecetaDetalle(recetaOriginal)}
-                    className={`text-sm sm:text-base font-bold text-[var(--text-primary)] cursor-pointer hover:text-[var(--accent-protein)] transition-colors ${
-                      comida.consumida ? 'line-through text-[var(--text-muted)]' : ''
-                    }`}
+                    className="cursor-pointer group/title"
                   >
-                    {comida.recetaNombre}
-                  </h4>
+                    <div className="flex items-center gap-2">
+                      <h4
+                        className={`text-sm sm:text-base font-bold text-[var(--text-primary)] group-hover/title:text-[var(--accent-protein)] transition-colors ${
+                          comida.consumida ? 'line-through text-[var(--text-muted)]' : ''
+                        }`}
+                      >
+                        {comida.recetaNombre}
+                      </h4>
+                      <span className="text-[11px] text-[var(--accent-protein)] opacity-0 group-hover/title:opacity-100 transition-opacity flex items-center gap-0.5 shrink-0 font-medium">
+                        <Eye className="w-3.5 h-3.5" /> Ver receta
+                      </span>
+                    </div>
 
-                  {/* Macros de la porción */}
-                  <div className="flex items-center gap-3 mt-2 text-xs tabular-nums text-[var(--text-secondary)] flex-wrap">
-                    <span className="font-semibold text-[var(--text-primary)]">
-                      {comida.macros.calorias} kcal
-                    </span>
-                    <span className="font-semibold text-[var(--accent-protein)]">
-                      {comida.macros.proteinas}g Prot
-                    </span>
-                    <span>{comida.macros.carbohidratos}g Carb</span>
-                    <span>{comida.macros.grasas}g Grasa</span>
-                    <span className="text-[var(--text-muted)]">{comida.macros.fibra}g Fibra</span>
+                    {/* Macros de la porción */}
+                    <div className="flex items-center gap-3 mt-1.5 text-xs tabular-nums text-[var(--text-secondary)] flex-wrap">
+                      <span className="font-semibold text-[var(--text-primary)]">
+                        {comida.macros.calorias} kcal
+                      </span>
+                      <span className="font-semibold text-[var(--accent-protein)]">
+                        {comida.macros.proteinas}g Prot
+                      </span>
+                      <span>{comida.macros.carbohidratos}g Carb</span>
+                      <span>{comida.macros.grasas}g Grasa</span>
+                      <span className="text-[var(--text-muted)]">{comida.macros.fibra}g Fibra</span>
+                    </div>
                   </div>
+
+                  {/* Detalle visual de Ingredientes (Cuánto es de cada cosa) */}
+                  {recetaOriginal && (
+                    <div
+                      onClick={() => onVerRecetaDetalle(recetaOriginal)}
+                      className="mt-3 pt-2.5 border-t border-[var(--border-subtle)]/70 cursor-pointer group/ing"
+                    >
+                      <div className="flex items-center justify-between text-xs mb-1.5">
+                        <span className="font-bold text-[11px] text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+                          <ChefHat className="w-3.5 h-3.5 text-[var(--accent-protein)]" />
+                          Cuánto es de cada cosa:
+                        </span>
+                        <span className="text-[11px] font-semibold text-[var(--accent-protein)] group-hover/ing:underline flex items-center gap-0.5">
+                          Tocar para ver pasos completos
+                          <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        {recetaOriginal.ingredientes.map((ing, i) => (
+                          <div
+                            key={i}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)]/80 border border-[var(--border-subtle)] text-xs text-[var(--text-primary)] transition-colors shadow-2xs"
+                          >
+                            <span className="font-bold text-[var(--accent-protein)] tabular-nums">
+                              {ing.cantidad} {ing.unidad}
+                            </span>
+                            <span className="text-[var(--text-secondary)]">{ing.nombre}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Acciones de la comida (Fijar / Cambiar) */}
